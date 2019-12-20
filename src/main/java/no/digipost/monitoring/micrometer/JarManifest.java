@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package no.digipost.monitoring.micrometer;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.jar.Manifest;
 
@@ -25,24 +23,29 @@ class JarManifest extends Manifest {
 
     JarManifest() throws ClassNotFoundException {
         this(
-            Class.forName((String) System.getProperties().get("sun.java.command"), true, Thread.currentThread().getContextClassLoader())
+                Class.forName((String) System.getProperties().get("sun.java.command"), true, Thread.currentThread().getContextClassLoader())
         );
     }
 
     JarManifest(Class classFromJar) {
-        final URL jarLocation = classFromJar.getProtectionDomain().getCodeSource().getLocation();
+        final String jarLocation = classFromJar.getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toString()
+                .replaceAll("!/BOOT-INF/classes!/", ""); // If you have an executable jar, your main jar is exploded into a BOOT-INF-folder structure
 
         try {
             Collections.list(Thread.currentThread().getContextClassLoader().getResources("META-INF/MANIFEST.MF"))
-                .stream()
-                .filter(s -> s.toString().contains(jarLocation.toString()))
-                .findAny().ifPresent(mf -> {
-                try {
-                    this.read(mf.openStream());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+                    .stream()
+                    .filter(s -> s.toString().contains(jarLocation))
+                    .findAny()
+                    .ifPresent(mf -> {
+                        try {
+                            this.read(mf.openStream());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
         } catch (IOException e) {
             System.err.println("Det blir ikke noe informasjon fra META-INF/MANIFEST.MF");
             e.printStackTrace();
