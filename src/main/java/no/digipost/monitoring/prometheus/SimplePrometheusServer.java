@@ -44,8 +44,8 @@ public class SimplePrometheusServer {
                 }
             });
 
-            new Thread(server::start).start();
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(2)));
+            new Thread(server::start, "SimplePrometheusServer").start();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(2), "SimplePrometheusServerShutdownHook"));
 
             infoLogger.accept("Started Prometheus metrics endpoint server on port {}", prometheusPort);
         } catch (IOException e) {
