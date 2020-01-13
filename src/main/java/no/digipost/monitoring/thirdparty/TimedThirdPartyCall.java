@@ -27,11 +27,11 @@ import java.util.function.Supplier;
  * Tha API is quite restricted compared to Timer-api:
  * 
  * Usage:
- * {code}
- * TimedThirdPartyCall<String> getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+ * <pre>
+ * TimedThirdPartyCall&#60;String&#62; getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
  *                 .exceptionAsFailure();
- * String result = getStuff.call(() -> "OK");
- * {code}
+ * String result = getStuff.call(() -&#62; "OK");
+ * </pre>
  * 
  * You control what is OK and failed by specifying the function for states that give an AppStatus. This
  * can be done with helper methods on TimedThirdPartyCallDescriptor. You can also 
@@ -40,7 +40,7 @@ import java.util.function.Supplier;
  * an api, via batch, which has some kind of timeout-issue. Just check for a 
  * situation and count as WARN in stead.
  * 
- * @param <RESULT>
+ * @param <RESULT> The return of your function
  */
 public class TimedThirdPartyCall<RESULT> {
 

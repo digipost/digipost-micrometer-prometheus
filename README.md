@@ -42,3 +42,40 @@ new SimplePrometheusServer(LOG::info)
                     prometheusRegistry, 9610
                 );
 ``` 
+
+## TimedThirdPartyCall
+
+With `TimedThirdPartyCall` you can wrap your code to get metrics on the call with extended funtionality on top of what 
+micrometer Timed gives you.
+
+An example:
+```java
+final BiFunction<MyResponse, Optional<RuntimeException>, AppStatus> warnOnSituation = (response, possibleException) -> possibleException.isPresent() || "ERROR_SITUATION".equals(response.data) ? AppStatus.WARN : AppStatus.OK;
+
+final TimedThirdPartyCall<MyResponse> getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+        .callResponseStatus(warnOnSituation);
+
+getStuff.call(() -> new MyResponse("ERROR_SITUATION"));
+``` 
+
+This will produce a number of metrics:
+```
+app_third_party_call_total{name="ExternalService_getStuff", status="OK"} 0.0
+app_third_party_call_total{name="ExternalService_getStuff", status="WARN"} 1.0
+app_third_party_call_total{name="ExternalService_getStuff", status="FAILED"} 0.0
+app_third_party_call_seconds_count{name="ExternalService_getStuff",} 1.0
+app_third_party_call_seconds_sum{name="ExternalService_getStuff",} 6.6018E-5
+app_third_party_call_seconds_max{name="ExternalService_getStuff",} 6.6018E-5
+```
+
+The idea is that Timed only count exections overall. What we want in addition is finer granularity to create better alerts
+in our alerting rig. By specifying a function by witch we say OK/WARN/FAILED we can exclude error-situations 
+that we want to igore from alerts reacting to `FAILED` or a percentage of `FAILED/TOTAL`.
+
+You can also use simple exception-mapper-function for a boolean OK/FAILED:
+```java
+TimedThirdPartyCall<String> getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+    .exceptionAsFailure();
+
+String result = getStuff.call(() -> "OK");
+```
