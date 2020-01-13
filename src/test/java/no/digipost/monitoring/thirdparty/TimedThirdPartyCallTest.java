@@ -121,10 +121,24 @@ class TimedThirdPartyCallTest {
         assertSendWarn();
     }
 
+    @Test
+    void define_percentiles() {
+        final TimedThirdPartyCall<MyResponse> getStuff = TimedThirdPartyCallDescriptor
+                .create("ExternalService", "getStuff", prometheusRegistry, 0.17)
+                .exceptionAsFailure();
+
+        getStuff.call(() -> new MyResponse("OK"));
+        
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.17\",}"));
+    }
+
     void assertSendOK() {
         assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\",} 1.0"));
         assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\",} 0.0"));
         assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds_count{name=\"ExternalService_getStuff\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.95\",}"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.99\",}"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.5\",}"));
     }
 
     void assertSendFailed() {

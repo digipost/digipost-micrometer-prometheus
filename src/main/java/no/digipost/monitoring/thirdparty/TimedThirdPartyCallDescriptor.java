@@ -39,17 +39,28 @@ public class TimedThirdPartyCallDescriptor {
     private final String group;
     private final String endpoint;
 
-    private TimedThirdPartyCallDescriptor(String group, String endpoint, MeterRegistry prometheusRegistry) {
+    private TimedThirdPartyCallDescriptor(String group, String endpoint, MeterRegistry prometheusRegistry, double... percentiles) {
         this.group = group;
         this.endpoint = endpoint;
         this.successCounter = prometheusRegistry.counter("app_third_party_call_total", Tags.of("name", getName(), "status", AppStatus.OK.name()));
         this.warnCounter = prometheusRegistry.counter("app_third_party_call_total", Tags.of("name", getName(), "status", AppStatus.WARN.name()));
         this.failedCounter = prometheusRegistry.counter("app_third_party_call_total", Tags.of("name", getName(), "status", AppStatus.FAILED.name()));
-        this.timer = prometheusRegistry.timer("app_third_party_call", Tags.of("name", getName()));
+
+        if (percentiles.length == 0) {
+            this.timer = Timer.builder("app_third_party_call")
+                    .tags(Tags.of("name", getName()))
+                    .publishPercentiles(0.5, 0.95, 0.99)
+                    .register(prometheusRegistry);
+        } else {
+            this.timer = Timer.builder("app_third_party_call")
+                    .tags(Tags.of("name", getName()))
+                    .publishPercentiles(percentiles)
+                    .register(prometheusRegistry);
+        }
     }
 
-    public static TimedThirdPartyCallDescriptor create(String group, String endpoint, MeterRegistry prometheusRegistry) {
-        return new TimedThirdPartyCallDescriptor(group, endpoint, prometheusRegistry);
+    public static TimedThirdPartyCallDescriptor create(String group, String endpoint, MeterRegistry prometheusRegistry, double... percentiles) {
+        return new TimedThirdPartyCallDescriptor(group, endpoint, prometheusRegistry, percentiles);
     }
 
     public <RESULT> TimedThirdPartyCall<RESULT> exceptionAsFailure() {
