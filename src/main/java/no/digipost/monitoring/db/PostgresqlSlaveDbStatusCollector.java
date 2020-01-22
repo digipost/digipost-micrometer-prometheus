@@ -23,14 +23,16 @@ import java.sql.SQLException;
 
 /**
  * This collector is able to say if the database is in recovery and thus queries master
+ * 
+ * This will only work with a PostgreSQL database. Hence the name.
  */
-public class SlaveDbStatusCollector implements DbStatusCollector {
+public class PostgresqlSlaveDbStatusCollector implements DbStatusCollector {
 
     private static final String VALIDATION_QUERY = "SELECT pg_is_in_recovery()";
     private static final String TYPE = "slave";
     private DataSource ds;
 
-    public SlaveDbStatusCollector(DataSource ds) {
+    public PostgresqlSlaveDbStatusCollector(DataSource ds) {
         this.ds = ds;
     }
 

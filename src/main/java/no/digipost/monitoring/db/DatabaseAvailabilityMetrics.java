@@ -23,15 +23,15 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  * A Gauge metric for databaase status
  * 
  * USAGE:
- * new PsqlDatabaseMetrics("mydatabase", new MasterDbStatusCollector(myDatasource)).bindTo(meterRegistry);
+ * new DatabaseAvailabilityMetrics("mydatabase", new MasterDbStatusCollector(myDatasource)).bindTo(meterRegistry);
  *
  */
-public class PsqlDatabaseMetrics implements MeterBinder {
+public class DatabaseAvailabilityMetrics implements MeterBinder {
 
     private final String name;
     private final DbStatusCollector collector;
 
-    public PsqlDatabaseMetrics(String name, DbStatusCollector collector) {
+    public DatabaseAvailabilityMetrics(String name, DbStatusCollector collector) {
         this.name = name;
         this.collector = collector;
     }
