@@ -20,37 +20,46 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
 /**
- * A Gauge metric for databaase status
+ * Gauge metrics for databaase connection pol
  * <p>
  * USAGE:
- * new DatabaseAvailabilityMetrics("mydatabase", new MasterDbStatusCollector(myDatasource)).bindTo(meterRegistry);
+ * new DatabaseConnectionPoolMetrics("mydatabase", new MyPoolStats()).bindTo(meterRegistry);
  * <p>
  * Beware that there is a weak reference for the collector object instance
  * in both this class and in the gauge underneath. Retain either the
  * DbStatusCollector instance or the DatabaseAvailabilityMetrics instance
  * or the instance will be GC-ed. If this happens the metric will report a NaN value
+ * <p>
+ * You will need to implement the PoolStats interface with your
+ * connection pool api.
  */
-public class DatabaseAvailabilityMetrics implements MeterBinder {
+public class DatabaseConnectionPoolMetrics implements MeterBinder {
 
     private final String name;
-    private final DbStatusCollector collector;
+    private final PoolStats poolStats;
 
     /**
      * @param name      'dbname' will be a tag in the metric
-     * @param collector Your db-collector
+     * @param poolStats instance of your implementation of PoolStats
      */
-    public DatabaseAvailabilityMetrics(String name, DbStatusCollector collector) {
+    public DatabaseConnectionPoolMetrics(String name, PoolStats poolStats) {
         this.name = name;
-        this.collector = collector;
+        this.poolStats = poolStats;
     }
 
     @Override
     public void bindTo(MeterRegistry registry) {
         registry.gauge(
                 "app_database_status"
-                , Tags.of("name", "DATABASE_AVAILABLE", "type", this.collector.type(), "dbname", this.name)
-                , collector
-                , (c) -> c.check().getDouble()
+                , Tags.of("name", "DATABASE_POOL_CONNECTIONS_MAX", "type", this.poolStats.type(), "dbname", this.name, "implementation", this.poolStats.implementation())
+                , this.poolStats
+                , PoolStats::getMaxPoolSize
+        );
+        registry.gauge(
+                "app_database_status"
+                , Tags.of("name", "DATABASE_POOL_CONNECTIONS_USAGE", "type", this.poolStats.type(), "dbname", this.name, "implementation", this.poolStats.implementation())
+                , this.poolStats
+                , PoolStats::getNumberOfUsedConnections
         );
     }
 }
