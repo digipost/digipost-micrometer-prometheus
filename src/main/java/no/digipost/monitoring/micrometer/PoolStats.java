@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package no.digipost.monitoring.db;
+package no.digipost.monitoring.micrometer;
 
 /**
  * This interface need to be implemented for your specific

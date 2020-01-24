@@ -13,36 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package no.digipost.monitoring.db;
+package no.digipost.monitoring.micrometer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
 /**
- * Gauge metrics for databaase connection pol
+ * Gauge metrics for a pool. This can be any type of pool: database connection pool, a thread pool, a http client pool et cetera.
  * <p>
  * USAGE:
- * new DatabaseConnectionPoolMetrics("mydatabase", new MyPoolStats()).bindTo(meterRegistry);
+ * new PoolMetrics("mydatabase", new MyDatabaseConnectionPoolStats()).bindTo(meterRegistry);
  * <p>
  * Beware that there is a weak reference for the collector object instance
  * in both this class and in the gauge underneath. Retain either the
  * DbStatusCollector instance or the DatabaseAvailabilityMetrics instance
  * or the instance will be GC-ed. If this happens the metric will report a NaN value
  * <p>
- * You will need to implement the PoolStats interface with your
- * connection pool api.
+ * You will need to implement the PoolStats interface with your pool api.
+ * 
+ * * app_pool_connections_max
+ * * app_pool_connections_total
  */
-public class DatabaseConnectionPoolMetrics implements MeterBinder {
+public class PoolMetrics implements MeterBinder {
 
     private final String name;
     private final PoolStats poolStats;
 
     /**
-     * @param name      'dbname' will be a tag in the metric
+     * @param name      'name' will be a tag in the metric
      * @param poolStats instance of your implementation of PoolStats
      */
-    public DatabaseConnectionPoolMetrics(String name, PoolStats poolStats) {
+    public PoolMetrics(String name, PoolStats poolStats) {
         this.name = name;
         this.poolStats = poolStats;
     }
@@ -50,14 +52,14 @@ public class DatabaseConnectionPoolMetrics implements MeterBinder {
     @Override
     public void bindTo(MeterRegistry registry) {
         registry.gauge(
-                "app_database_status"
-                , Tags.of("name", "DATABASE_POOL_CONNECTIONS_MAX", "type", this.poolStats.type(), "dbname", this.name, "implementation", this.poolStats.implementation())
+                "app_pool_connections_max"
+                , Tags.of("name", this.name, "type", this.poolStats.type(), "implementation", this.poolStats.implementation())
                 , this.poolStats
                 , PoolStats::getMaxPoolSize
         );
         registry.gauge(
-                "app_database_status"
-                , Tags.of("name", "DATABASE_POOL_CONNECTIONS_USAGE", "type", this.poolStats.type(), "dbname", this.name, "implementation", this.poolStats.implementation())
+                "app_pool_connections_total"
+                , Tags.of("name", this.name, "type", this.poolStats.type(), "implementation", this.poolStats.implementation())
                 , this.poolStats
                 , PoolStats::getNumberOfUsedConnections
         );
