@@ -23,7 +23,7 @@ class JarManifest extends Manifest {
 
     JarManifest() throws ClassNotFoundException {
         this(
-                Class.forName((String) System.getProperties().get("sun.java.command"), true, Thread.currentThread().getContextClassLoader())
+                Class.forName(((String) System.getProperties().get("sun.java.command")).split(" ")[0], true, Thread.currentThread().getContextClassLoader())
         );
     }
 
