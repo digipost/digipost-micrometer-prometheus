@@ -43,6 +43,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>no.digipost</groupId>
+            <artifactId>digg</artifactId>
+            <version>0.22</version>
+        </dependency>
+        <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
             <version>1.3.2</version>
