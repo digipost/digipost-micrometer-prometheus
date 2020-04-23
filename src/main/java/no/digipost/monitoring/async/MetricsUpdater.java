@@ -80,7 +80,9 @@ public class MetricsUpdater {
                 warnings.append("AsyncUpdater '" + u.getName() + "' did not run successfully last time.").append("\n");
             }
         });
-        LOG.warning(warnings.toString());
+        if (errors.get() > 0) {
+            LOG.warning(warnings.toString());
+        }
         return errors.get();
     }
 
