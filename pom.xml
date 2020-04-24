@@ -43,6 +43,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>no.digipost</groupId>
+            <artifactId>digg</artifactId>
+            <version>0.22</version>
+        </dependency>
+        <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
             <version>1.3.2</version>
@@ -67,6 +72,12 @@
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
             <version>2.2-rc1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>3.3.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -106,6 +117,9 @@
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.0.0-M3</version>
+                    <configuration>
+                        <argLine>-Djava.util.logging.config.file=/logging.properties</argLine>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <artifactId>maven-dependency-plugin</artifactId>
@@ -187,6 +201,7 @@
                         <exclude>**/*.pem</exclude>
                         <exclude>**/*.cer</exclude>
                         <exclude>**/*.response</exclude>
+                        <exclude>**/logging.properties</exclude>
                         <exclude>.editorconfig</exclude>
                         <exclude>.java-version</exclude>
                         <exclude>.drone.yml</exclude>
