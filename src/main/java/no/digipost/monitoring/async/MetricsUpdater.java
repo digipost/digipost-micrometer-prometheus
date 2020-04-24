@@ -15,6 +15,7 @@
  */
 package no.digipost.monitoring.async;
 
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import no.digipost.DiggConcurrent;
 
@@ -64,10 +65,10 @@ public class MetricsUpdater {
         this.clock = clock;
         this.scheduledExecutor = scheduledExecutor;
 
-        registry.gauge(scrapeErrorsMetricName, updaters, MetricsUpdater::getScrapeErrors);
+        Gauge.builder(scrapeErrorsMetricName, this::getScrapeErrors).register(registry);
     }
 
-    private static double getScrapeErrors(List<AsyncUpdater> updaters) {
+    double getScrapeErrors() {
         AtomicInteger errors = new AtomicInteger(0);
         StringBuilder warnings = new StringBuilder();
         updaters.forEach(u -> {
