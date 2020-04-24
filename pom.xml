@@ -201,6 +201,7 @@
                         <exclude>**/*.pem</exclude>
                         <exclude>**/*.cer</exclude>
                         <exclude>**/*.response</exclude>
+                        <exclude>**/logging.properties</exclude>
                         <exclude>.editorconfig</exclude>
                         <exclude>.java-version</exclude>
                         <exclude>.drone.yml</exclude>
