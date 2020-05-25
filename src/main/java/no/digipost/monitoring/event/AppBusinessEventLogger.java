@@ -37,7 +37,7 @@ import io.micrometer.core.instrument.Tags;
  * # TYPE app_business_events_1min_error_thresholds gauge
  * app_business_events_1min_error_thresholds{name="VIOLATION_WITH_WARN_AND_ERROR",} 5.0
  * 
- * Example alertmanager error:
+ * Example error alert:
  *   - alert: MyErrorEvents
  *     expr: &gt;
  *       sum by (job,name) (increase(app_business_events_total[5m]))

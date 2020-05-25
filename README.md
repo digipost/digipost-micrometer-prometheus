@@ -86,6 +86,28 @@ TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRe
         .callResponseStatus(warnOnSituation, 0.95, 0.99);
 ```
 
+## MetricsUpdater
+
+Often you want to have metrics that might be slow to get. Examples of this is count rows in a Postgres-database or 
+maybe stats from a keystore. Typically you want to have som kind of worker threat that updates this 
+value on a regular basis. But how do you know that your worker thread is not stuck?
+For this you can use the `MetricsUpdater` class. Create an instance of it and specify the number of threads you want. Now 
+registrer a runnable at an interval. 
+
+```java
+metricsUpdater.registerAsyncUpdate("count-table", Duration.ofMinutes(10), () -> {
+    //Slow count of huge database
+});
+```
+
+You can the alert if this is stale:
+
+```
+- alert: AsyncUpdateScrapeErrors
+     expr: app_async_update_scrape_errors > 0
+     for: 2m
+```
+
 ## EventLogger
 
 Sometimes you want to have metrics for some event that happens in your application. And sometimes you want som kind of
@@ -109,9 +131,7 @@ app_business_events_1min_warn_thresholds{name="VIOLATION_WITH_WARN",} 5.0
 app_business_events_total{name="VIOLATION_WITH_WARN",} 1.0
 ```
 
-You can then use the gauge `app_business_events_1min_warn_thresholds` to register alerts with your system. 
-This is alertmanger:
-
+You can then use the gauge `app_business_events_1min_warn_thresholds` to register alerts with your system:
 ```
   - alert: MyEvents
     expr: >
