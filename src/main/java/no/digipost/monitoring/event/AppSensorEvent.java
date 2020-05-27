@@ -15,10 +15,10 @@
  */
 package no.digipost.monitoring.event;
 
-public interface EventLogger {
-
-    void log(AppBusinessEvent event);
-    
-    void log(AppBusinessEvent name, double increment);
-
+/**
+ * An AppSensorEvent is an event that you want to give a
+ * severity weight. 
+ */
+public interface AppSensorEvent extends AppBusinessEvent {
+    Number getSensorScore();
 }

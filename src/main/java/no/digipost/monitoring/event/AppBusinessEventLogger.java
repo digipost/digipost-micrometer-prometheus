@@ -21,11 +21,11 @@ import io.micrometer.core.instrument.Tags;
 
 /**
  * EventLogger-implemetation for metrics with gauges for warns and errors
- * 
+ *
  * You need to implement the logic for the actual events your self. 
- * 
+ *
  * @see AppBusinessEvent for more information.
- * 
+ *
  * Example output:
  * # HELP app_business_events_1min_warn_thresholds  
  * # TYPE app_business_events_1min_warn_thresholds gauge
@@ -36,7 +36,7 @@ import io.micrometer.core.instrument.Tags;
  * # HELP app_business_events_1min_error_thresholds  
  * # TYPE app_business_events_1min_error_thresholds gauge
  * app_business_events_1min_error_thresholds{name="VIOLATION_WITH_WARN_AND_ERROR",} 5.0
- * 
+ *
  * Example error alert:
  *   - alert: MyErrorEvents
  *     expr: &gt;
@@ -49,6 +49,7 @@ public class AppBusinessEventLogger implements EventLogger {
     static final String METRIC_APP_BUSINESS_EVENTS_TOTAL = "app_business_events_total";
     static final String METRIC_APP_BUSINESS_EVENTS_WARN_THRESHOLDS = "app_business_events_1min_warn_thresholds";
     static final String METRIC_APP_BUSINESS_EVENTS_ERROR_THRESHOLDS = "app_business_events_1min_error_thresholds";
+    static final String METRIC_APP_BUSINESS_EVENTS_SENSOR_SCORE = "app_business_events_sensor_score";
 
     private final MeterRegistry meterRegistry;
 
@@ -62,9 +63,16 @@ public class AppBusinessEventLogger implements EventLogger {
 
     @Override
     public void log(AppBusinessEvent event) {
-        this.counter(event).increment();
-        event.getWarnThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_WARN_THRESHOLDS, Tags.of("name", event.getName()), e.getOneMinuteThreshold()));
-        event.getErrorThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_ERROR_THRESHOLDS, Tags.of("name", event.getName()), e.getOneMinuteThreshold()));
+        this.log(event, 1);
     }
 
+    @Override
+    public void log(AppBusinessEvent event, double increment) {
+        this.counter(event).increment(increment);
+        event.getWarnThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_WARN_THRESHOLDS, Tags.of("name", event.getName()), e.getOneMinuteThreshold()));
+        event.getErrorThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_ERROR_THRESHOLDS, Tags.of("name", event.getName()), e.getOneMinuteThreshold()));
+        if (event instanceof AppSensorEvent) {
+            this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_SENSOR_SCORE, Tags.of("name", event.getName()), ((AppSensorEvent) event).getSensorScore());
+        }
+    }
 }
