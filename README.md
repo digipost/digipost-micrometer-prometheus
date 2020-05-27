@@ -115,6 +115,7 @@ alert or warning when they occur at a given rate. This implementation is a way t
 
 Your application need to implement the interface `AppBusinessEvent`. We usually do that with an enum so that we have 
 easy access to the instance of the event. You can se a complete implementation of this in `AppBusinessEventLoggerTest`.
+You can also use the interface `AppSensorEvent` to add a multiplier score (severity) to an event.
 
 ```java
 EventLogger eventLogger = new AppBusinessEventLogger(meterRegistry);
