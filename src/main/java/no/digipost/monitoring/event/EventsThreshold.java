@@ -16,5 +16,5 @@
 package no.digipost.monitoring.event;
 
 public interface EventsThreshold {
-    double getOneMinuteThreshold();
+    Number getOneMinuteThreshold();
 }
