@@ -15,6 +15,7 @@ This project includes:
   Digipost Digg under The Apache Software License, Version 2.0
   digipost-micrometer-prometheus under Apache License, Version 2.0
   HdrHistogram under Public Domain, per Creative Commons CC0 or BSD-2-Clause
+  Java Servlet API under CDDL + GPLv2 with classpath exception
   LatencyUtils under Public Domain, per Creative Commons CC0
   micrometer-core under The Apache Software License, Version 2.0
   micrometer-registry-prometheus under The Apache Software License, Version 2.0
