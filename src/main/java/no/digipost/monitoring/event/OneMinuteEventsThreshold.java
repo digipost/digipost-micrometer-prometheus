@@ -17,7 +17,7 @@ package no.digipost.monitoring.event;
 
 public class OneMinuteEventsThreshold implements EventsThreshold {
 
-    private double threshold;
+    private Double threshold;
 
     private OneMinuteEventsThreshold(double threshold) {
         this.threshold = threshold;
@@ -32,7 +32,7 @@ public class OneMinuteEventsThreshold implements EventsThreshold {
     }
 
     @Override
-    public double getOneMinuteThreshold() {
+    public Number getOneMinuteThreshold() {
         return threshold;
     }
 }

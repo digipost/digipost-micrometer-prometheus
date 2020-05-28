@@ -69,6 +69,14 @@ public class AppBusinessEventLoggerTest {
         assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_error_thresholds{name=\"VIOLATION_WITH_WARN_AND_ERROR\",} 5.0"));
     }
 
+    @Test
+    void check_that_values_are_not_GCed() {
+        eventLogger.log(MyBusinessEvents.VIOLATION_WITH_WARN_AND_ERROR, 1337);
+        Runtime.getRuntime().gc();
+        
+        assertThat(prometheusRegistry.scrape(), not(containsString("NaN")));
+    }
+
     private enum MyBusinessEvents implements AppBusinessEvent {
         VIOLATION,
         VIOLATION_WITH_WARN(OneMinuteEventsThreshold.perDay(7200)),
