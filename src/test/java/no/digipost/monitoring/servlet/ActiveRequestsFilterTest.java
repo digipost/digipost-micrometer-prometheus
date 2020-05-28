@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static no.digipost.monitoring.servlet.ActiveRequestsFilter.Config.forMaxThreads;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -57,7 +58,7 @@ class ActiveRequestsFilterTest {
     void test_longrunning() {
         unit = new ActiveRequestsFilter(prometheusRegistry, forMaxThreads(10).longRunningThreshold(LONG_RUNNING_THRESHOLD));
 
-        simulateRequest("/hello", Instant.now().minus(LONG_RUNNING_THRESHOLD));
+        simulateRequest("/hello", Instant.now().minus(LONG_RUNNING_THRESHOLD).minus(ofSeconds(1)));
 
         assertActive("1.0");
         assertLongRunning("1.0");
@@ -69,8 +70,8 @@ class ActiveRequestsFilterTest {
                         .longRunningThreshold(LONG_RUNNING_THRESHOLD)
                         .longRunningExclusions(singletonList(r -> r.path.equals("/hello"))));
 
-        simulateRequest( "/hello", Instant.now().minus(LONG_RUNNING_THRESHOLD));
-        simulateRequest( "/another", Instant.now().minus(LONG_RUNNING_THRESHOLD));
+        simulateRequest( "/hello", Instant.now().minus(LONG_RUNNING_THRESHOLD).minus(ofSeconds(1)));
+        simulateRequest( "/another", Instant.now().minus(LONG_RUNNING_THRESHOLD).minus(ofSeconds(1)));
 
         assertActive("2.0");
         assertLongRunning("1.0");
