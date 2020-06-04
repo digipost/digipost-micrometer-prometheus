@@ -25,6 +25,14 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Log-events metrics for specified logback appender. Dimensions for <code>level</code>, <code>logger</code>
+ * <p>
+ * USAGE:
+ * <pre>
+ * LogbackLoggerMetrics.forRootLogger().bindTo(meterRegistry);
+ * </pre>
+ */
 public class LogbackLoggerMetrics implements MeterBinder {
 
     private final LoggerContext loggerContext;
@@ -71,6 +79,9 @@ public class LogbackLoggerMetrics implements MeterBinder {
                 .register(registry);
     }
 
+    /**
+     * Based on https://github.com/prometheus/client_java/blob/master/simpleclient_logback/src/main/java/io/prometheus/client/logback/InstrumentedAppender.java
+     */
     private class MetricsAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         @Override
         public void start() {
