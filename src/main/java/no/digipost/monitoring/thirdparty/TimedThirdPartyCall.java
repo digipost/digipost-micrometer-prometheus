@@ -64,12 +64,12 @@ public class TimedThirdPartyCall<RESULT> {
 
         if (AppStatus.FAILED == reportWarnPredicate.apply(returnValue, thrown)) {
             descriptor.failedCounter.increment();
-            if (thrown.isPresent()) throw thrown.get();
         } else if (AppStatus.WARN == reportWarnPredicate.apply(returnValue, thrown)) {
             descriptor.warnCounter.increment();
         } else {
             descriptor.successCounter.increment();
         }
+        if (thrown.isPresent()) throw thrown.get();
 
         return returnValue;
     }
