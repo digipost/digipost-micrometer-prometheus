@@ -122,6 +122,30 @@ class TimedThirdPartyCallTest {
     }
 
     @Test
+    void should_throw_exception_and_record_timing_OK() {
+        final BiFunction<String, Optional<RuntimeException>, AppStatus> OKOnSituation = (response, possibleException) -> {
+            if (possibleException.isPresent()) {
+                return possibleException.get() instanceof RuntimeException ? AppStatus.OK : AppStatus.FAILED;
+            } else {
+                return AppStatus.OK;
+            }
+        };
+
+        TimedThirdPartyCall<String> getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+                .callResponseStatus(OKOnSituation);
+
+        try{
+            getStuff.call(() -> {
+                throw new RuntimeException("This should be fine (appstatus.OK), but throw exception anyway so we don't swallow exception that may be handled further out.");
+            });
+        }
+        catch (RuntimeException e){
+//            Swallow so test don't fail.
+        }
+        assertSendOK();
+    }
+
+    @Test
     void define_percentiles() {
         final TimedThirdPartyCall<MyResponse> getStuff = TimedThirdPartyCallDescriptor
                 .create("ExternalService", "getStuff", prometheusRegistry, 0.17)
