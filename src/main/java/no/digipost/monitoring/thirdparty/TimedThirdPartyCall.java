@@ -62,14 +62,15 @@ public class TimedThirdPartyCall<RESULT> {
             thrown = Optional.of(t);
         }
 
-        if (AppStatus.FAILED == reportWarnPredicate.apply(returnValue, thrown)) {
+        AppStatus appStatus = reportWarnPredicate.apply(returnValue, thrown);
+        if (AppStatus.FAILED == appStatus) {
             descriptor.failedCounter.increment();
-        } else if (AppStatus.WARN == reportWarnPredicate.apply(returnValue, thrown)) {
+        } else if (AppStatus.WARN == appStatus) {
             descriptor.warnCounter.increment();
         } else {
             descriptor.successCounter.increment();
         }
-        if (thrown.isPresent()) throw thrown.get();
+        thrown.ifPresent(e -> { throw e; });
 
         return returnValue;
     }

@@ -29,6 +29,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TimedThirdPartyCallTest {
 
@@ -134,14 +135,11 @@ class TimedThirdPartyCallTest {
         TimedThirdPartyCall<String> getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
                 .callResponseStatus(OKOnSituation);
 
-        try{
-            getStuff.call(() -> {
-                throw new RuntimeException("This should be fine (appstatus.OK), but throw exception anyway so we don't swallow exception that may be handled further out.");
-            });
-        }
-        catch (RuntimeException e){
-//            Swallow so test don't fail.
-        }
+        assertThrows(RuntimeException.class, () ->
+                getStuff.call(() -> {
+                    throw new RuntimeException("This should be fine (appstatus.OK), but throw exception anyway so we don't swallow exception that may be handled further out.");
+                }));
+
         assertSendOK();
     }
 
