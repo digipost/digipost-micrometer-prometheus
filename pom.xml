@@ -11,7 +11,7 @@
 
     <artifactId>digipost-micrometer-prometheus</artifactId>
     <version>0-SNAPSHOT</version>
-    <description>Metrics and andpoints for Micrometer and Promethues in Digipost</description>
+    <description>Metrics and endpoints for Micrometer and Prometheus in Digipost</description>
     <name>digipost-micrometer-prometheus</name>
 
     <licenses>
@@ -283,9 +283,9 @@
     </build>
 
     <scm>
-        <connection>scm:git:git@github.com:digipost/digipost-html-validator.git</connection>
-        <developerConnection>scm:git:git@github.com:digipost/digipost-html-validator.git</developerConnection>
-        <url>scm:git:git@github.com:digipost/digipost-html-validator</url>
+        <connection>scm:git:git@github.com:digipost/digipost-micrometer-prometheus.git</connection>
+        <developerConnection>scm:git:git@github.com:digipost/digipost-micrometer-prometheus.git</developerConnection>
+        <url>scm:git:git@github.com:digipost/digipost-micrometer-prometheus</url>
         <tag>HEAD</tag>
     </scm>
 </project>
