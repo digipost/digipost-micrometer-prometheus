@@ -23,7 +23,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  * A Gauge metric for databaase status
  * <p>
  * USAGE:
- * new DatabaseAvailabilityMetrics("mydatabase", new MasterDbStatusCollector(myDatasource)).bindTo(meterRegistry);
+ * new DatabaseAvailabilityMetrics("mydatabase", new PrimaryDbStatusCollector(myDatasource)).bindTo(meterRegistry);
  * <p>
  * Beware that there is a weak reference for the collector object instance
  * in both this class and in the gauge underneath. Retain either the

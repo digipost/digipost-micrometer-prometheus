@@ -16,7 +16,7 @@
 package no.digipost.monitoring.db;
 
 public enum DbStatus {
-    ERROR(0), OK(1), CONNECTED_TO_MASTER(2);
+    ERROR(0), OK(1), CONNECTED_TO_PRIMARY(2);
     
     int val;
 

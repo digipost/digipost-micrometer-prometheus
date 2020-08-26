@@ -22,17 +22,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * This collector is able to say if the database is in recovery and thus queries master
+ * This collector is able to say if the database is in recovery and thus queries primary
  * 
  * This will only work with a PostgreSQL database. Hence the name.
  */
-public class PostgresqlSlaveDbStatusCollector implements DbStatusCollector {
+public class PostgresqlReplicaDbStatusCollector implements DbStatusCollector {
 
     private static final String VALIDATION_QUERY = "SELECT pg_is_in_recovery()";
-    private static final String TYPE = "slave";
+    private static final String TYPE = "replica";
     private DataSource ds;
 
-    public PostgresqlSlaveDbStatusCollector(DataSource ds) {
+    public PostgresqlReplicaDbStatusCollector(DataSource ds) {
         this.ds = ds;
     }
 
@@ -46,7 +46,7 @@ public class PostgresqlSlaveDbStatusCollector implements DbStatusCollector {
             if (rs.getBoolean(1)) {
                 return DbStatus.OK;
             } else {
-                return DbStatus.CONNECTED_TO_MASTER;
+                return DbStatus.CONNECTED_TO_PRIMARY;
             }
 
         } catch (SQLException e) {

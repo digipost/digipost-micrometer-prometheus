@@ -20,13 +20,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class MasterDbStatusCollector implements DbStatusCollector {
+public class PrimaryDbStatusCollector implements DbStatusCollector {
 
     private static final String VALIDATION_QUERY = "SELECT 1";
-    private static final String TYPE = "master";
+    private static final String TYPE = "primary";
     private DataSource ds;
 
-    public MasterDbStatusCollector(DataSource ds) {
+    public PrimaryDbStatusCollector(DataSource ds) {
         this.ds = ds;
     }
 
