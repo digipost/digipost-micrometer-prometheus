@@ -20,7 +20,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 
 /**
- * EventLogger-implemetation for metrics with gauges for warns and errors
+ * EventLogger-implementation for metrics with gauges for warns and errors
  *
  * You need to implement the logic for the actual events your self. 
  *
