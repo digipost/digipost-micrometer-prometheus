@@ -149,3 +149,46 @@ You can then use the gauge `app_business_events_1min_warn_thresholds` to registe
 
 The nice thing here is that by doing the `sum by (job, name)` you will compare only the metrics with the same
 name. For this eksample that is `VIOLATION_WITH_WARN` which is your uniqe event name in the system.
+
+
+## LogbackLoggerMetrics
+Log-events metrics for specified logback appender. Dimensions for level and logger.
+```java
+LogbackLoggerMetrics.forRootLogger().bindTo(meterRegistry);
+LogbackLoggerMetrics.forLogger("my.logger.name").bindTo(meterRegistry);
+```
+
+This will produce the following prometheus scrape output:
+```
+# HELP logback_logger_events_total
+# TYPE logback_logger_events_total counter
+logback_logger_events_total{application="my-application",level="warn",logger="ROOT",} 0.0
+logback_logger_events_total{application="my-application",level="error",logger="ROOT",} 0.0
+logback_logger_events_total{application="my-application",level="trace",logger="ROOT",} 0.0
+logback_logger_events_total{application="my-application",level="info",logger="ROOT",} 18.0
+logback_logger_events_total{application="my-application",level="debug",logger="ROOT",} 0.0
+```
+
+
+## LoggerThresholdMetrics
+
+To be used in conjunction with `LogbackLoggerMetrics`. 
+Define warn and error thresholds for a specific logger.
+```java
+LoggerThresholdMetrics.forLogger(Logger.ROOT_LOGGER_NAME, 5, 10).bindTo(this);
+```
+
+This will produce the following prometheus scrape output:
+```
+# HELP logger_events_1min_threshold
+# TYPE logger_events_1min_threshold gauge
+logger_events_1min_threshold{application="my-application",level="warn",logger="ROOT",} 5.0
+logger_events_1min_threshold{application="my-application",level="error",logger="ROOT",} 10.0
+``` 
+
+These metrics can be used for alerting in combination with the metrics from `LogbackLoggerMetrics`. Prometheus expression:
+```
+sum by (job,name,level,logger) (increase(logback_logger_events_total[5m]))
+>=
+max by (job,name,level,logger) (log_events_1min_threshold) * 5
+```
