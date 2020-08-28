@@ -18,8 +18,7 @@ package no.digipost.monitoring.logging;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
-
-import java.time.Duration;
+import no.digipost.monitoring.util.Minutes;
 
 /**
  *
@@ -42,22 +41,22 @@ class LoggerThresholdMetric implements MeterBinder {
     private final String loggerName;
     private final double threshold;
     private final String level;
-    private final Duration duration;
+    private final Minutes minutes;
 
     Gauge thresholdGauge;
 
-    LoggerThresholdMetric(String loggerName, double threshold, String level, Duration duration) {
+    LoggerThresholdMetric(String loggerName, double threshold, String level, Minutes minutes) {
         this.loggerName = loggerName;
         this.threshold = threshold;
         this.level = level;
-        this.duration = duration;
+        this.minutes = minutes;
 
     }
 
     @Override
     public void bindTo(MeterRegistry registry) {
 
-        String metricName = "log_events_"+ duration.toMinutes() + "min_threshold";
+        String metricName = "log_events_" + minutes.get() + "min_threshold";
         thresholdGauge = Gauge.builder(metricName, () -> threshold)
                 .tag("logger", loggerName)
                 .tag("level", level)

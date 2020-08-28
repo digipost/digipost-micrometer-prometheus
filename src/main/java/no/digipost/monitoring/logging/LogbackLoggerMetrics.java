@@ -23,9 +23,9 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import no.digipost.monitoring.util.Minutes;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class LogbackLoggerMetrics implements MeterBinder {
     private Counter warnCounter;
     private Counter errorCounter;
 
-    private List<LoggerThresholdMetric> threshold5MinMetrics = new ArrayList<>();
+    private final List<LoggerThresholdMetric> threshold5MinMetrics = new ArrayList<>();
 
     private LogbackLoggerMetrics(String loggerName) {
         this.loggerName = loggerName;
@@ -68,7 +68,7 @@ public class LogbackLoggerMetrics implements MeterBinder {
      * @return this
      */
     public LogbackLoggerMetrics warnThreshold5min(double threshold) {
-        threshold5MinMetrics.add(new LoggerThresholdMetric(loggerName, threshold, "warn", Duration.ofMinutes(5)));
+        threshold5MinMetrics.add(new LoggerThresholdMetric(loggerName, threshold, "warn", Minutes.of(5)));
         return this;
     }
 
@@ -78,7 +78,7 @@ public class LogbackLoggerMetrics implements MeterBinder {
      * @return this
      */
     public LogbackLoggerMetrics errorThreshold5min(double threshold) {
-        threshold5MinMetrics.add(new LoggerThresholdMetric(loggerName, threshold, "error",Duration.ofMinutes(5)));
+        threshold5MinMetrics.add(new LoggerThresholdMetric(loggerName, threshold, "error", Minutes.of(5)));
         return this;
     }
 
