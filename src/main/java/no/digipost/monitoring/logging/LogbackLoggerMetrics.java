@@ -25,6 +25,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Log-events metrics for specified logback appender. Dimensions for <code>level</code>, <code>logger</code>
  * <p>
@@ -43,6 +47,8 @@ public class LogbackLoggerMetrics implements MeterBinder {
     private Counter warnCounter;
     private Counter errorCounter;
 
+    private List<LoggerThresholdMetric> threshold5MinMetrics = new ArrayList<>();
+
     private LogbackLoggerMetrics(String loggerName) {
         this.loggerName = loggerName;
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -54,6 +60,26 @@ public class LogbackLoggerMetrics implements MeterBinder {
 
     public static LogbackLoggerMetrics forLogger(String loggerName) {
         return new LogbackLoggerMetrics(loggerName);
+    }
+
+    /**
+     * Creates a new metric with name log_events_5min_threshold and dimensions level="warn" and logger="YourLoggerName"
+     * @param threshold the value of the threshold metric
+     * @return this
+     */
+    public LogbackLoggerMetrics warnThreshold5min(double threshold) {
+        threshold5MinMetrics.add(new LoggerThresholdMetric(loggerName, threshold, "warn", Duration.ofMinutes(5)));
+        return this;
+    }
+
+    /**
+     * Creates a new metric with name log_events_5min_threshold and dimensions level="error" and logger="YourLoggerName"
+     * @param threshold the value of the threshold metric
+     * @return this
+     */
+    public LogbackLoggerMetrics errorThreshold5min(double threshold) {
+        threshold5MinMetrics.add(new LoggerThresholdMetric(loggerName, threshold, "error",Duration.ofMinutes(5)));
+        return this;
     }
 
     @Override
@@ -70,6 +96,10 @@ public class LogbackLoggerMetrics implements MeterBinder {
         metricsAppender.start();
 
         logger.addAppender(metricsAppender);
+
+        for (LoggerThresholdMetric loggerThresholdMetric : threshold5MinMetrics) {
+            loggerThresholdMetric.bindTo(registry);
+        }
     }
 
     private Counter createCounter(MeterRegistry registry, String level) {
