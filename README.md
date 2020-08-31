@@ -169,26 +169,29 @@ logback_logger_events_total{application="my-application",level="info",logger="RO
 logback_logger_events_total{application="my-application",level="debug",logger="ROOT",} 0.0
 ```
 
+### Thresholds
 
-## LoggerThresholdMetrics
+Metrics for logging level threshold can also be created with the methods `warnThreshold5min` and `errorThreshold5min`.
 
-To be used in conjunction with `LogbackLoggerMetrics`. 
-Define warn and error thresholds for a specific logger.
+Ex:
 ```java
-LoggerThresholdMetrics.forLogger(Logger.ROOT_LOGGER_NAME, 5, 10).bindTo(this);
+LogbackLoggerMetrics.forLogger(Logger.ROOT_LOGGER_NAME)
+        .warnThreshold5min(10)
+        .errorThreshold5min(5)
+        .bindTo(prometheusRegistry);
 ```
 
-This will produce the following prometheus scrape output:
+This will produce the following metrics during prometheus scraping, in addition to the metrics above:
 ```
 # HELP logger_events_1min_threshold
 # TYPE logger_events_1min_threshold gauge
-logger_events_1min_threshold{application="my-application",level="warn",logger="ROOT",} 5.0
-logger_events_1min_threshold{application="my-application",level="error",logger="ROOT",} 10.0
+logger_events_5min_threshold{application="my-application",level="warn",logger="ROOT",} 10.0
+logger_events_5min_threshold{application="my-application",level="error",logger="ROOT",} 5.0
 ``` 
 
-These metrics can be used for alerting in combination with the metrics from `LogbackLoggerMetrics`. Prometheus expression:
+These metrics can be used for alerting in combination with the metrics above. Prometheus expression:
 ```
 sum by (job,name,level,logger) (increase(logback_logger_events_total[5m]))
 >=
-max by (job,name,level,logger) (log_events_1min_threshold) * 5
+max by (job,name,level,logger) (log_events_5min_threshold)
 ```
