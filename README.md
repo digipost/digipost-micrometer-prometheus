@@ -11,9 +11,9 @@ Usage in a `MeterRegistry`:
 new ApplicationInfoMetrics().bindTo(this);
 ```
 
-Application metric with data from `MANIFEST.MF`.
+Application metric with data from `MANIFEST.MF` or environment variables.
 
-This is what is expected to exist in the manifest:
+This is what is expected to exist in the manifest or as key value environment variables:
 
 ```
 Build-Jdk-Spec: 12
@@ -29,6 +29,13 @@ This will create this metric in Prometheus running java 11:
 # TYPE app_info gauge
 app_info{application="my-application",buildNumber="ffb9099",buildTime="2019-12-19T22:52:05+0100",buildVersion="1.2.3",javaBuildVersion="12",javaVersion="11",} 1.0
 ```
+
+The following metric will be created if no values are present in the manifest or environment variables:
+```
+# HELP app_info General build and runtime information about the application. This is a static value
+# TYPE app_info gauge
+app_info{javaVersion="11",} 1.0
+```  
 
 ## Simple Prometheus server
 
@@ -155,6 +162,7 @@ name. For this eksample that is `VIOLATION_WITH_WARN` which is your uniqe event 
 Log-events metrics for specified logback appender. Dimensions for level and logger.
 ```java
 LogbackLoggerMetrics.forRootLogger().bindTo(meterRegistry);
+//or
 LogbackLoggerMetrics.forLogger("my.logger.name").bindTo(meterRegistry);
 ```
 
@@ -191,7 +199,7 @@ logger_events_5min_threshold{application="my-application",level="error",logger="
 
 These metrics can be used for alerting in combination with the metrics above. Prometheus expression:
 ```
-sum by (job,name,level,logger) (increase(logback_logger_events_total[5m]))
+sum by (job,level,logger) (increase(logback_logger_events_total[5m]))
 >=
-max by (job,name,level,logger) (log_events_5min_threshold)
+max by (job,level,logger) (log_events_5min_threshold)
 ```
