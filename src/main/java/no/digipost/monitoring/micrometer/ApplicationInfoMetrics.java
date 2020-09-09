@@ -17,10 +17,15 @@ package no.digipost.monitoring.micrometer;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.jar.Manifest;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Adds `app.info` gauge that has several tags suitable for showing information about
@@ -29,6 +34,7 @@ import java.util.jar.Manifest;
  * walue typically from `artifactId` in your pom.
  * <p>
  * Values fetched from `manifest.mf` and `System.getProperties()`.
+ * Environment variables will be used if `manifest.mf` is not available (i.e. not run from jar)
  */
 public class ApplicationInfoMetrics implements MeterBinder {
 
@@ -40,7 +46,7 @@ public class ApplicationInfoMetrics implements MeterBinder {
      * Usually that is ok. But if that is not the case, use the other constructor
      * and specify the class yourself.
      *
-     * @throws ClassNotFoundException - Throws if class from System.properties("sun.java.command") is not found. 
+     * @throws ClassNotFoundException - Throws if class from System.properties("sun.java.command") is not found.
      * It could be that the property is missing?
      */
     public ApplicationInfoMetrics() throws ClassNotFoundException {
@@ -58,25 +64,33 @@ public class ApplicationInfoMetrics implements MeterBinder {
 
     @Override
     public void bindTo(MeterRegistry registry) {
-        if (manifest.getMainAttributes().isEmpty()) {
-            // Guard for not packaged run
-            return;
-        }
+        fromManifestOrEnv("Implementation-Title")
+                .ifPresent(artifactId -> registry.config().commonTags("application", artifactId));
 
-        final String artifactId = manifest.getMainAttributes().getValue("Implementation-Title");
-        registry.config().commonTags("application", artifactId);
+        List<Tag> tags = new ArrayList<>();
 
-        Tags tags = Tags.of(
-            "buildTime", manifest.getMainAttributes().getValue("Git-Build-Time")
-            , "buildVersion", manifest.getMainAttributes().getValue("Git-Build-Version")
-            , "buildNumber", manifest.getMainAttributes().getValue("Git-Commit")
-            , "javaBuildVersion", manifest.getMainAttributes().getValue("Build-Jdk-Spec")
-            , "javaVersion", (String) System.getProperties().get("java.version")
-        );
+        addTagIfValuePresent(tags,"buildTime","Git-Build-Time");
+        addTagIfValuePresent(tags,"buildVersion","Git-Build-Version");
+        addTagIfValuePresent(tags,"buildNumber","Git-Commit");
+        addTagIfValuePresent(tags,"javaBuildVersion","Build-Jdk-Spec");
+
+        tags.add(Tag.of("javaVersion", (String) System.getProperties().get("java.version")));
 
         Gauge.builder("app.info", () -> 1.0d)
-            .description("General build and runtime information about the application. This is a static value")
-            .tags(tags)
-            .register(registry);
+                .description("General build and runtime information about the application. This is a static value")
+                .tags(tags)
+                .register(registry);
+    }
+
+    private void addTagIfValuePresent(List<Tag> tags, String tagKey, String valueName) {
+        fromManifestOrEnv(valueName).ifPresent(value -> tags.add(Tag.of(tagKey, value)));
+    }
+
+    private Optional<String> fromManifestOrEnv(String name) {
+        String value = manifest.getMainAttributes().getValue(name);
+        if (value == null) {
+            value = System.getenv(name);
+        }
+        return ofNullable(value);
     }
 }
