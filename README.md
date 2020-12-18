@@ -1,6 +1,6 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/no.digipost/digipost-micrometer-prometheus/badge.svg)](https://maven-badges.herokuapp.com/maven-central/no.digipost/digipost-micrometer-prometheus)
 ![](https://github.com/digipost/digipost-micrometer-prometheus/workflows/Build%20and%20deploy/badge.svg)
-[![License](https://img.shields.io/badge/license-Apache%202-blue)](https://github.com/digipost/digipost-micrometer-prometheus/blob/master/LICENCE)
+[![License](https://img.shields.io/badge/license-Apache%202-blue)](https://github.com/digipost/digipost-micrometer-prometheus/blob/main/LICENCE)
 
 # digipost-micrometer-prometheus
 
