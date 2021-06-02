@@ -27,7 +27,9 @@ import no.digipost.monitoring.util.Minutes;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Log-events metrics for specified logback appender. Dimensions for <code>level</code>, <code>logger</code>
@@ -48,6 +50,7 @@ public class LogbackLoggerMetrics implements MeterBinder {
     private Counter errorCounter;
 
     private final List<LoggerThresholdMetric> threshold5MinMetrics = new ArrayList<>();
+    private final Set<String> excludedLoggerNameSet = new HashSet<>();
 
     private LogbackLoggerMetrics(String loggerName) {
         this.loggerName = loggerName;
@@ -79,6 +82,16 @@ public class LogbackLoggerMetrics implements MeterBinder {
      */
     public LogbackLoggerMetrics errorThreshold5min(double threshold) {
         threshold5MinMetrics.add(new LoggerThresholdMetric(loggerName, threshold, "error", Minutes.of(5)));
+        return this;
+    }
+
+    /**
+     * Exclude events logged by loggerName from being counted in logback_logger_events metrics (all log levels).
+     * @param loggerName The name of the logger to exclude counting events from
+     * @return this
+     */
+    public LogbackLoggerMetrics excludeLogger(String loggerName) {
+        excludedLoggerNameSet.add(loggerName);
         return this;
     }
 
@@ -120,6 +133,8 @@ public class LogbackLoggerMetrics implements MeterBinder {
 
         @Override
         protected void append(ILoggingEvent event) {
+            if (excludedLoggerNameSet.contains(event.getLoggerName())) return;
+
             try {
                 switch (event.getLevel().toInt()) {
                     case Level.TRACE_INT:

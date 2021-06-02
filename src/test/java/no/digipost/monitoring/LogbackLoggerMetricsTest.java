@@ -15,13 +15,11 @@
  */
 package no.digipost.monitoring;
 
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import no.digipost.monitoring.logging.LogbackLoggerMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -71,6 +69,16 @@ public class LogbackLoggerMetricsTest {
 
         assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\",} 2.0"));
         assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"test\",} 1.0"));
+    }
+
+    @Test
+    void test_excluded_logger_should_not_be_included_in_count() {
+        LogbackLoggerMetrics.forRootLogger().excludeLogger("ignored").bindTo(prometheusRegistry);
+
+        LoggerFactory.getLogger("ignored").error("error");
+        LoggerFactory.getLogger("another.logger").error("error"); // counted by root
+
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\",} 1.0"));
     }
 
 }
