@@ -177,6 +177,16 @@ logback_logger_events_total{application="my-application",level="info",logger="RO
 logback_logger_events_total{application="my-application",level="debug",logger="ROOT",} 0.0
 ```
 
+### Excluding logger from metric
+
+If you for some reasons don't want log events from a spesific logger to be included in the metric this can be done:
+
+```java
+LogbackLoggerMetrics.forRootLogger()
+    .excludeLogger("ignored.logger.name")
+    .bindTo(prometheusRegistry);
+```
+
 ### Thresholds
 
 Metrics for logging level threshold can also be created with the methods `warnThreshold5min` and `errorThreshold5min`.
