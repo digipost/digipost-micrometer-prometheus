@@ -72,10 +72,14 @@ public class LogbackLoggerMetricsTest {
     }
 
     @Test
-    void test_excluded_logger_should_not_be_included_in_count() {
-        LogbackLoggerMetrics.forRootLogger().excludeLogger("ignored").bindTo(prometheusRegistry);
+    void test_excluded_loggers_should_not_be_included_in_count() {
+        LogbackLoggerMetrics.forRootLogger()
+                .excludeLogger("ignored")
+                .excludeLogger("also.ignored")
+                .bindTo(prometheusRegistry);
 
         LoggerFactory.getLogger("ignored").error("error");
+        LoggerFactory.getLogger("also.ignored").error("error");
         LoggerFactory.getLogger("another.logger").error("error"); // counted by root
 
         assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\",} 1.0"));
