@@ -33,8 +33,10 @@ import static java.util.Optional.ofNullable;
  * bind a commonTag in registry `application` with a
  * walue typically from `artifactId` in your pom.
  * <p>
- * Values fetched from `manifest.mf` and `System.getProperties()`.
- * Environment variables will be used if `manifest.mf` is not available (i.e. not run from jar)
+ * Values fetched system properties, process environment and from <code>manifest.mf</code>,
+ * in that order. You can use system properties or environment variables to
+ * override manifest values, or supply configuration when an application is
+ * not run from a jar.
  */
 public class ApplicationInfoMetrics implements MeterBinder {
 
@@ -58,7 +60,7 @@ public class ApplicationInfoMetrics implements MeterBinder {
      *
      * @param classFromJar - Class contained in jar you want metrics from
      */
-    public ApplicationInfoMetrics(Class classFromJar) {
+    public ApplicationInfoMetrics(Class<?> classFromJar) {
         manifest = new JarManifest(classFromJar);
     }
 
@@ -87,10 +89,18 @@ public class ApplicationInfoMetrics implements MeterBinder {
     }
 
     private Optional<String> fromManifestOrEnv(String name) {
-        String value = manifest.getMainAttributes().getValue(name);
+        String value = environmentVariableOrSystemProperty(name);
+        if (value == null) {
+            value = manifest.getMainAttributes().getValue(name);
+        }
+        return ofNullable(value);
+    }
+
+    private static String environmentVariableOrSystemProperty(String name) {
+        String value = System.getProperty(name);
         if (value == null) {
             value = System.getenv(name);
         }
-        return ofNullable(value);
+        return value;
     }
 }

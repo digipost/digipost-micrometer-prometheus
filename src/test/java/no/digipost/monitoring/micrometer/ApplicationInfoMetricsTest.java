@@ -17,9 +17,13 @@ package no.digipost.monitoring.micrometer;
 
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -43,4 +47,19 @@ class ApplicationInfoMetricsTest {
             fail();
         }
     }
+
+    @Test
+    void shouldOverrideManifestValueWithSystemProperty() {
+        ApplicationInfoMetrics applicationInfoMetrics = new ApplicationInfoMetrics(Logger.class);
+        String app = "NotMyApp";
+        try {
+            System.setProperty("Implementation-Title", app);
+            applicationInfoMetrics.bindTo(prometheusRegistry);
+        } finally {
+            System.getProperties().remove("Implementation-Title");
+        }
+        String scrapeResult = prometheusRegistry.scrape();
+        assertThat(scrapeResult, containsString(String.format("application=\"%s\"", app)));
+    }
+
 }
