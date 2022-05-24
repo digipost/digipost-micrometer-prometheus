@@ -91,6 +91,13 @@ public class MetricsUpdater {
         DiggConcurrent.ensureShutdown(scheduledExecutor, Duration.ofSeconds(30));
     }
 
+    /**
+     * Alias for {@link #stop()} for Spring <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Bean.html#destroyMethod--">@Bean</a> usage. This ensures that Spring automatically calls this method when destroying a bean.
+     */
+    public void shutdown() {
+        stop();
+    }
+
     public void registerAsyncUpdate(String updaterName, Duration updateInterval, Runnable setNewValues) {
         AsyncUpdater asyncUpdater = new AsyncUpdater(clock, updaterName, setNewValues, updateInterval);
         updaters.add(asyncUpdater);
