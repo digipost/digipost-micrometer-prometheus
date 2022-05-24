@@ -56,7 +56,7 @@ public class MetricsUpdater {
 
     public MetricsUpdater(MeterRegistry registry, int maxThreads, String scrapeErrorsMetricName) {
         this(registry,
-                Executors.newScheduledThreadPool(maxThreads, DiggConcurrent.threadNamingFactory("micrometer-metrics-updater")),
+                Executors.newScheduledThreadPool(maxThreads, DaemonThreadNamingFactory.withPrefix("micrometer-metrics-updater")),
                 scrapeErrorsMetricName,
                 Clock.systemDefaultZone());
     }
