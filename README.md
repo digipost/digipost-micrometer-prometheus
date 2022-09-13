@@ -87,6 +87,16 @@ TimedThirdPartyCall<String> getStuff = TimedThirdPartyCallDescriptor.create("Ext
 String result = getStuff.call(() -> "OK");
 ```
 
+For timing `void` functions you can use `NoResultTimedThirdPartyCall`,
+acquired by invoking the `noResult()` method:
+```java
+NoResultTimedThirdPartyCall voidFunction = TimedThirdPartyCallDescriptor.create("ExternalService", "voidFunction", prometheusRegistry)
+        .noResult()  // allows timing void function calls
+        .exceptionAsFailure();
+
+voidFunction.call(() -> {});
+```
+
 You can also defined percentiles (default 0.5, 0.95, 0.99):
 ```java
 TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
