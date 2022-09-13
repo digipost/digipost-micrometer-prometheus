@@ -15,22 +15,18 @@
  */
 package no.digipost.monitoring.thirdparty;
 
-import no.digipost.monitoring.micrometer.AppStatus;
+public class NoResultTimedThirdPartyCall {
 
-import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
+    private final TimedThirdPartyCall<Void> timedThirdPartyCall;
 
-public class NoResultTimedThirdPartyCall extends TimedThirdPartyCall<NoResult> {
-
-    NoResultTimedThirdPartyCall(TimedThirdPartyCallDescriptor descriptor, BiFunction<? super NoResult, Optional<RuntimeException>, AppStatus> reportWarnPredicate) {
-        super(descriptor, reportWarnPredicate);
+    NoResultTimedThirdPartyCall(TimedThirdPartyCall<Void> timedThirdPartyCall) {
+        this.timedThirdPartyCall = timedThirdPartyCall;
     }
 
     public void call(Runnable thirdPartyCall) {
-        call(() -> {
+        timedThirdPartyCall.call(() -> {
             thirdPartyCall.run();
-            return NoResult.NO_RESULT;
+            return null;
         });
     }
 

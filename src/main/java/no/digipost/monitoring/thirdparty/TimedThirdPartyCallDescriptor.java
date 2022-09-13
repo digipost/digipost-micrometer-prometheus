@@ -68,7 +68,7 @@ public class TimedThirdPartyCallDescriptor {
         private NoResultTimedThirdPartyCallDescriptor() {}
 
         public NoResultTimedThirdPartyCall exceptionAsFailure() {
-            return new NoResultTimedThirdPartyCall(TimedThirdPartyCallDescriptor.this, failOnException);
+            return new NoResultTimedThirdPartyCall(build(failOnException));
         }
 
     }
