@@ -154,6 +154,28 @@ class TimedThirdPartyCallTest {
         assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.17\",}"));
     }
 
+    @Test
+    void no_result_should_return_nothing_and_record_request() {
+        final NoResultTimedThirdPartyCall getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+                .noResult().exceptionAsFailure();
+
+        getStuff.call(() -> {});
+
+        assertSendOK();
+    }
+
+    @Test
+    void exception_should_propagate_and_record_failed_request() {
+        final NoResultTimedThirdPartyCall getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+                .noResult().exceptionAsFailure();
+
+        assertThrows(RuntimeException.class, () -> getStuff.call(() -> {
+            throw new RuntimeException("Whoohaa");
+        }));
+
+        assertSendFailed();
+    }
+
     void assertSendOK() {
         assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\",} 1.0"));
         assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\",} 0.0"));

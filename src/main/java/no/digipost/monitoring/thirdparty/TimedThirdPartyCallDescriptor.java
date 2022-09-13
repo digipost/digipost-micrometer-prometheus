@@ -63,9 +63,24 @@ public class TimedThirdPartyCallDescriptor {
         return new TimedThirdPartyCallDescriptor(group, endpoint, prometheusRegistry, percentiles);
     }
 
+    public class NoResultTimedThirdPartyCallDescriptor {
+
+        private NoResultTimedThirdPartyCallDescriptor() {}
+
+        public NoResultTimedThirdPartyCall exceptionAsFailure() {
+            return new NoResultTimedThirdPartyCall(TimedThirdPartyCallDescriptor.this, failOnException);
+        }
+
+    }
+
+    public NoResultTimedThirdPartyCallDescriptor noResult() {
+        return new NoResultTimedThirdPartyCallDescriptor();
+    }
+
     public <RESULT> TimedThirdPartyCall<RESULT> exceptionAsFailure() {
         return build(failOnException);
     }
+
 
     public <RESULT> TimedThirdPartyCall<RESULT> exceptionAndNullAsFailure() {
         return build(failOnExceptionOrNull);
