@@ -41,7 +41,14 @@ import java.util.Optional;
  * </code>
  */
 public interface AppBusinessEvent {
+
     String getName();
-    Optional<EventsThreshold> getWarnThreshold();
-    Optional<EventsThreshold> getErrorThreshold();
+
+    default Optional<EventsThreshold> getWarnThreshold() {
+        return Optional.empty();
+    }
+
+    default Optional<EventsThreshold> getErrorThreshold() {
+        return Optional.empty();
+    }
 }
