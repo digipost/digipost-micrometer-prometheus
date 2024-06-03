@@ -27,7 +27,7 @@ class JarManifest extends Manifest {
         );
     }
 
-    JarManifest(Class classFromJar) {
+    JarManifest(Class<?> classFromJar) {
         final String jarLocation = classFromJar.getProtectionDomain()
                 .getCodeSource()
                 .getLocation()
