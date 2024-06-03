@@ -19,11 +19,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-import no.digipost.DiggConcurrent;
 
 /**
- * A {@link ThreadFactory} based on {@link DiggConcurrent#threadNamingFactory(String)} but marks
- * new threads as daemon threads as well.
+ * A {@link ThreadFactory} which names threads with a custom base name,
+ * and marks new threads as daemon threads as well.
  */
 class DaemonThreadNamingFactory implements ThreadFactory {
     private final ThreadFactory backingFactory = Executors.defaultThreadFactory();

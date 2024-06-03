@@ -58,11 +58,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>no.digipost</groupId>
-            <artifactId>digg</artifactId>
-            <version>0.34</version>
-        </dependency>
-        <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
         </dependency>
@@ -121,6 +116,12 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>no.digipost</groupId>
+            <artifactId>digg</artifactId>
+            <version>0.34</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -12,7 +12,6 @@ specific language governing permissions and limitations
 under the License.
 
 This project includes:
-  Digipost Digg under The Apache Software License, Version 2.0
   digipost-micrometer-prometheus under Apache License, Version 2.0
   HdrHistogram under Public Domain, per Creative Commons CC0 or BSD-2-Clause
   LatencyUtils under Public Domain, per Creative Commons CC0
