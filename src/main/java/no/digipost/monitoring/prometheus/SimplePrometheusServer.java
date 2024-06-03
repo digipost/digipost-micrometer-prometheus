@@ -16,7 +16,7 @@
 package no.digipost.monitoring.prometheus;
 
 import com.sun.net.httpserver.HttpServer;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 
 import java.io.IOException;
 import java.io.OutputStream;

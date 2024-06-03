@@ -15,8 +15,8 @@
  */
 package no.digipost.monitoring.thirdparty;
 
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import no.digipost.monitoring.micrometer.AppStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ class TimedThirdPartyCallTest {
                 .exceptionAsFailure();
 
         final String result = getStuff.call(() -> "OK");
-        
+
         assertThat(result, is(equalTo("OK")));
 
         assertSendOK();
@@ -150,8 +150,8 @@ class TimedThirdPartyCallTest {
                 .exceptionAsFailure();
 
         getStuff.call(() -> new MyResponse("OK"));
-        
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.17\",}"));
+
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.17\"}"));
     }
 
     @Test
@@ -177,25 +177,25 @@ class TimedThirdPartyCallTest {
     }
 
     void assertSendOK() {
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\",} 1.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\",} 0.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds_count{name=\"ExternalService_getStuff\",} 1.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.95\",}"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.99\",}"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.5\",}"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\"} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\"} 0.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds_count{name=\"ExternalService_getStuff\"} 1"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.95\"}"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.99\"}"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds{name=\"ExternalService_getStuff\",quantile=\"0.5\"}"));
     }
 
     void assertSendFailed() {
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\",} 0.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\",} 1.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds_count{name=\"ExternalService_getStuff\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\"} 0.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\"} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds_count{name=\"ExternalService_getStuff\"} 1"));
     }
 
     void assertSendWarn() {
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\",} 0.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\",} 0.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"WARN\",} 1.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds_count{name=\"ExternalService_getStuff\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"OK\"} 0.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"FAILED\"} 0.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_total{name=\"ExternalService_getStuff\",status=\"WARN\"} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_third_party_call_seconds_count{name=\"ExternalService_getStuff\"} 1"));
     }
 
     static class MyResponse {

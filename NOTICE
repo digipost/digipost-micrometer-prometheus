@@ -15,9 +15,10 @@ This software includes third party software subject to the following licenses:
   micrometer-core under The Apache Software License, Version 2.0
   micrometer-observation under The Apache Software License, Version 2.0
   micrometer-registry-prometheus under The Apache Software License, Version 2.0
-  Prometheus Java Simpleclient under The Apache Software License, Version 2.0
-  Prometheus Java Simpleclient Common under The Apache Software License, Version 2.0
-  Prometheus Java Span Context Supplier - Common under The Apache Software License, Version 2.0
-  Prometheus Java Span Context Supplier - OpenTelemetry under The Apache Software License, Version 2.0
-  Prometheus Java Span Context Supplier - OpenTelemetry Agent under The Apache Software License, Version 2.0
+  Prometheus Metrics Config under The Apache Software License, Version 2.0
+  Prometheus Metrics Core under The Apache Software License, Version 2.0
+  Prometheus Metrics Exposition Formats under The Apache Software License, Version 2.0
+  Prometheus Metrics Model under The Apache Software License, Version 2.0
+  Prometheus Metrics Tracer Common under The Apache Software License, Version 2.0
+  Shaded Protobuf under The Apache Software License, Version 2.0
 
