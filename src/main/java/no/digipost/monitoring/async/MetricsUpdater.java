@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@ package no.digipost.monitoring.async;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import no.digipost.DiggConcurrent;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -28,6 +27,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.logging.Level.FINE;
 
 /**
  * Add alert for scrape errors to Prometheus:
@@ -47,7 +49,7 @@ public class MetricsUpdater {
 
     private static final Logger LOG = Logger.getLogger(MetricsUpdater.class.getName());
     final List<AsyncUpdater> updaters = new ArrayList<>();
-    private ScheduledExecutorService scheduledExecutor;
+    private ScheduledExecutorService scheduler;
     private Clock clock;
 
     public MetricsUpdater(MeterRegistry registry, int maxThreads) {
@@ -61,9 +63,9 @@ public class MetricsUpdater {
                 Clock.systemDefaultZone());
     }
 
-    MetricsUpdater(MeterRegistry registry, ScheduledExecutorService scheduledExecutor, String scrapeErrorsMetricName, Clock clock) {
+    MetricsUpdater(MeterRegistry registry, ScheduledExecutorService scheduler, String scrapeErrorsMetricName, Clock clock) {
         this.clock = clock;
-        this.scheduledExecutor = scheduledExecutor;
+        this.scheduler = scheduler;
 
         Gauge.builder(scrapeErrorsMetricName, this::getScrapeErrors).register(registry);
     }
@@ -88,7 +90,24 @@ public class MetricsUpdater {
     }
 
     public void stop() {
-        DiggConcurrent.ensureShutdown(scheduledExecutor, Duration.ofSeconds(30));
+        // Based on implementation in DiggConcurrent.ensureShutdown
+        // https://github.com/digipost/digg/blob/0.34/src/main/java/no/digipost/DiggConcurrent.java#L136-L167
+        scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(30, SECONDS)) {
+                LOG.info("Digipost MetricsUpdater ScheduledExecutor is forcefully shut down as waiting for orderly termination took more than 30 seconds");
+                scheduler.shutdownNow();
+            } else {
+                LOG.info("Digipost MetricsUpdater ScheduledExecutor was orderly shut down within the timeout of 30 seconds");
+            }
+        } catch (InterruptedException e) {
+            String logMessageTemplate = "Interrupted while waiting for termination of Digipost MetricsUpdater ScheduledExecutor. %s: %s";
+            if (LOG.isLoggable(FINE)) {
+                LOG.log(FINE, e, () -> String.format(logMessageTemplate, e.getClass().getSimpleName(), e.getMessage()));
+            } else {
+                LOG.info(() -> String.format(logMessageTemplate, e.getClass().getSimpleName(), e.getMessage()));
+            }
+        }
     }
 
     /**
@@ -101,7 +120,7 @@ public class MetricsUpdater {
     public void registerAsyncUpdate(String updaterName, Duration updateInterval, Runnable setNewValues) {
         AsyncUpdater asyncUpdater = new AsyncUpdater(clock, updaterName, setNewValues, updateInterval);
         updaters.add(asyncUpdater);
-        scheduledExecutor.scheduleAtFixedRate(asyncUpdater, 0, updateInterval.toMillis(), TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(asyncUpdater, 0, updateInterval.toMillis(), TimeUnit.MILLISECONDS);
     }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,8 @@
 package no.digipost.monitoring.logging;
 
 import ch.qos.logback.classic.Logger;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,9 +41,9 @@ class LoggerThresholdMetricTest {
                 .errorThreshold5min(5)
                 .bindTo(prometheusRegistry);
         String scrape = prometheusRegistry.scrape();
-        
-        assertThat(scrape, containsString("log_events_5min_threshold{level=\"warn\",logger=\"ROOT\",} 10.0"));
-        assertThat(scrape, containsString("log_events_5min_threshold{level=\"error\",logger=\"ROOT\",} 5.0"));
+
+        assertThat(scrape, containsString("log_events_5min_threshold{level=\"warn\",logger=\"ROOT\"} 10.0"));
+        assertThat(scrape, containsString("log_events_5min_threshold{level=\"error\",logger=\"ROOT\"} 5.0"));
     }
 
     @Test
@@ -52,8 +52,8 @@ class LoggerThresholdMetricTest {
                 .warnThreshold5min(10)
                 .bindTo(prometheusRegistry);
         String scrape = prometheusRegistry.scrape();
-        
-        assertThat(scrape, containsString("log_events_5min_threshold{level=\"warn\",logger=\"ROOT\",} 10.0"));
+
+        assertThat(scrape, containsString("log_events_5min_threshold{level=\"warn\",logger=\"ROOT\"} 10.0"));
         assertThat(scrape, not(containsString("log_events_5min_threshold{level=\"error\"")));
     }
 
@@ -62,7 +62,7 @@ class LoggerThresholdMetricTest {
         LogbackLoggerMetrics.forLogger(Logger.ROOT_LOGGER_NAME)
                 .bindTo(prometheusRegistry);
         String scrape = prometheusRegistry.scrape();
-        
+
         assertThat(scrape, not(containsString("log_events_5min_threshold")));
     }
 

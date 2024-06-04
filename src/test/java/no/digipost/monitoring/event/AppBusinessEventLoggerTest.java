@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
  */
 package no.digipost.monitoring.event;
 
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +40,7 @@ public class AppBusinessEventLoggerTest {
     @Test
     void should_register_event() {
         eventLogger.log(MyBusinessEvents.VIOLATION);
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION\"} 1.0"));
         assertThat(prometheusRegistry.scrape(), not(containsString("app_business_events_1min_warn_thresholds")));
         assertThat(prometheusRegistry.scrape(), not(containsString("app_business_events_1min_error_thresholds")));
     }
@@ -48,32 +48,32 @@ public class AppBusinessEventLoggerTest {
     @Test
     void should_register_event_with_warn() {
         eventLogger.log(MyBusinessEvents.VIOLATION_WITH_WARN);
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION_WITH_WARN\",} 1.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_warn_thresholds{name=\"VIOLATION_WITH_WARN\",} 5.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION_WITH_WARN\"} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_warn_thresholds{name=\"VIOLATION_WITH_WARN\"} 5.0"));
         assertThat(prometheusRegistry.scrape(), not(containsString("app_business_events_1min_error_thresholds")));
     }
 
     @Test
     void should_register_event_with_error() {
         eventLogger.log(MyBusinessEvents.VIOLATION_WITH_ERROR);
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION_WITH_ERROR\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION_WITH_ERROR\"} 1.0"));
         assertThat(prometheusRegistry.scrape(), not(containsString("app_business_events_1min_warn_thresholds")));
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_error_thresholds{name=\"VIOLATION_WITH_ERROR\",} 5.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_error_thresholds{name=\"VIOLATION_WITH_ERROR\"} 5.0"));
     }
 
     @Test
     void should_register_event_with_warn_and_error() {
         eventLogger.log(MyBusinessEvents.VIOLATION_WITH_WARN_AND_ERROR);
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION_WITH_WARN_AND_ERROR\",} 1.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_warn_thresholds{name=\"VIOLATION_WITH_WARN_AND_ERROR\",} 5.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_error_thresholds{name=\"VIOLATION_WITH_WARN_AND_ERROR\",} 5.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_total{name=\"VIOLATION_WITH_WARN_AND_ERROR\"} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_warn_thresholds{name=\"VIOLATION_WITH_WARN_AND_ERROR\"} 5.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("app_business_events_1min_error_thresholds{name=\"VIOLATION_WITH_WARN_AND_ERROR\"} 5.0"));
     }
 
     @Test
     void check_that_values_are_not_GCed() {
         eventLogger.log(MyBusinessEvents.VIOLATION_WITH_WARN_AND_ERROR, 1337);
         Runtime.getRuntime().gc();
-        
+
         assertThat(prometheusRegistry.scrape(), not(containsString("NaN")));
     }
 

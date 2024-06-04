@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@ package no.digipost.monitoring.micrometer;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import io.micrometer.core.lang.NonNull;
 
 /**
  * @see RuntimeStatus for possible values of the metric
@@ -32,7 +31,7 @@ public class RuntimeStatusBinder implements MeterBinder {
     }
 
     @Override
-    public void bindTo(@NonNull MeterRegistry registry) {
+    public void bindTo(MeterRegistry registry) {
         Gauge.builder("app_runtime_status", () -> status.get().getValue())
                 .description("State of application with regards the runtime status")
                 .register(registry);

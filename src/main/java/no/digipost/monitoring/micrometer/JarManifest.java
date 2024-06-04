@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ class JarManifest extends Manifest {
         );
     }
 
-    JarManifest(Class classFromJar) {
+    JarManifest(Class<?> classFromJar) {
         final String jarLocation = classFromJar.getProtectionDomain()
                 .getCodeSource()
                 .getLocation()

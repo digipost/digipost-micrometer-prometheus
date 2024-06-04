@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) Posten Norge AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
  */
 package no.digipost.monitoring;
 
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import no.digipost.monitoring.logging.LogbackLoggerMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,8 +44,8 @@ public class LogbackLoggerMetricsTest {
         LoggerFactory.getLogger("test").error("error");
         LoggerFactory.getLogger("another.logger").error("another error");
 
-        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"warn\",logger=\"test\",} 2.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"test\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"warn\",logger=\"test\"} 2.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"test\"} 1.0"));
     }
 
     @Test
@@ -55,8 +55,8 @@ public class LogbackLoggerMetricsTest {
         LoggerFactory.getLogger("test").error("error");
         LoggerFactory.getLogger("test").warn("warn");
 
-        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"warn\",logger=\"ROOT\",} 1.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"warn\",logger=\"ROOT\"} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\"} 1.0"));
     }
 
     @Test
@@ -67,8 +67,8 @@ public class LogbackLoggerMetricsTest {
         LoggerFactory.getLogger("test").error("error"); // counted by both
         LoggerFactory.getLogger("another.logger").error("error"); // counted by root
 
-        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\",} 2.0"));
-        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"test\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\"} 2.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"test\"} 1.0"));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class LogbackLoggerMetricsTest {
         LoggerFactory.getLogger("also.ignored").error("error");
         LoggerFactory.getLogger("another.logger").error("error"); // counted by root
 
-        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\",} 1.0"));
+        assertThat(prometheusRegistry.scrape(), containsString("logback_logger_events_total{level=\"error\",logger=\"ROOT\"} 1.0"));
     }
 
 }
