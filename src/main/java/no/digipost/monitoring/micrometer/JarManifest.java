@@ -33,7 +33,7 @@ import java.util.jar.Manifest;
 import static java.lang.Thread.currentThread;
 import static no.digipost.monitoring.micrometer.KeyValueResolver.noValue;
 
-class JarManifest extends Manifest {
+class JarManifest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JarManifest.class);
 
@@ -112,6 +112,9 @@ class JarManifest extends Manifest {
             }
         });
 
+    }
+
+    private JarManifest() {
     }
 
 }
