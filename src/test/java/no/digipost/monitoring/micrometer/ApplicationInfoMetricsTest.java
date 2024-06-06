@@ -17,7 +17,6 @@ package no.digipost.monitoring.micrometer;
 
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -30,25 +29,19 @@ import static uk.co.probablyfine.matchers.Java8Matchers.where;
 
 class ApplicationInfoMetricsTest {
 
-    private PrometheusMeterRegistry prometheusRegistry;
-
-    @BeforeEach
-    void setUp() {
-        this.prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-    }
+    private PrometheusMeterRegistry meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 
     @Test
     public void shouldNotThrowErrorIfManifestValuesDontExists() {
         assertDoesNotThrow(() -> {
             var metrics = new ApplicationInfoMetrics(ApplicationInfoMetricsTest.class);
-            metrics.bindTo(prometheusRegistry);
-            System.out.println(prometheusRegistry.scrape());
+            metrics.bindTo(meterRegistry);
+            System.out.println(meterRegistry.scrape());
         });
     }
 
     @Test
     void shouldOverrideManifestValueWithSystemProperty() {
-        var meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         var metrics = new ApplicationInfoMetrics(Logger.class);
 
         metrics.bindTo(meterRegistry);
