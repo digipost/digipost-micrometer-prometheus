@@ -129,6 +129,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>uk.co.probablyfine</groupId>
+            <artifactId>java-8-matchers</artifactId>
+            <version>1.9</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hamcrest</groupId>
+                    <artifactId>hamcrest-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
