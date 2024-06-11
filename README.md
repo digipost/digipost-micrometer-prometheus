@@ -2,11 +2,47 @@
 ![](https://github.com/digipost/digipost-micrometer-prometheus/workflows/Build%20and%20deploy/badge.svg)
 [![License](https://img.shields.io/badge/license-Apache%202-blue)](https://github.com/digipost/digipost-micrometer-prometheus/blob/main/LICENCE)
 
+
 # digipost-micrometer-prometheus
+
+
+## Common application tag MeterFilter
+
+To include the **name of your application in all reported metrics**, make sure to configure this as
+early as possible before any meters are bound to your `MeterRegistry`. E.g. configure this where you _create_ your registry:
+
+```java
+MeterRegistry registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+MeterFilters.tryIncludeApplicationNameCommonTag().ifPresentOrElse(
+        config()::meterFilter,
+        () -> LOG.warn("Unable to include application common tag in MeterRegistry"));
+```
+
+This will try to determine the name of your application by resolving the value of the `Implementation-Title` key in the
+`MANIFEST.MF` file of the JAR file containing the class which started your application.
+You also have the option to provide a class yourself instead of relying on this being automatically discovered. The class should
+be located in the JAR which also contains the `MANIFEST.MF` which contains the `Implementation-Title` you would like to use as
+your application name.
+
+The example above logs a warning should this discovery mechanism fail to resolve your application name. You may choose to handle
+this in any way depending on your preference, e.g. throw an exception instead of just logging.
+
+You can also skip all this automatic discovery, and just **supply the name of your application** when configuring the filter:
+
+```java
+MeterRegistry registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+meterRegistry.config().meterFilter(MeterFilters.includeApplicationNameCommonTag("my-application"))
+```
+
+See PR #34 for more examples on how to configure the filter.
+
+
+
 
 ## Micrometer metrics
 
-Usage in a `MeterRegistry`:
+Usage with a `MeterRegistry`:
+
 ```java
 new ApplicationInfoMetrics().bindTo(this);
 ```
@@ -17,25 +53,30 @@ This is what is expected to exist in the manifest or as key value environment va
 
 ```
 Build-Jdk-Spec: 12
-Implementation-Title: my-application
 Git-Build-Time: 2019-12-19T22:52:05+0100
 Git-Build-Version: 1.2.3
 Git-Commit: ffb9099
 ```
 
 This will create this metric in Prometheus running java 11:
+
 ```
 # HELP app_info General build and runtime information about the application. This is a static value
 # TYPE app_info gauge
-app_info{application="my-application",buildNumber="ffb9099",buildTime="2019-12-19T22:52:05+0100",buildVersion="1.2.3",javaBuildVersion="12",javaVersion="11",} 1.0
+app_info{application="my-application",buildNumber="ffb9099",buildTime="2019-12-19T22:52:05+0100",buildVersion="1.2.3",javaBuildVersion="12",javaVersion="11"} 1.0
 ```
 
+(Note, `application="my-application"` will only be included if you configured the "Common application tag MeterFilter" described previously.)
+
 The following metric will be created if no values are present in the manifest or environment variables:
+
 ```
 # HELP app_info General build and runtime information about the application. This is a static value
 # TYPE app_info gauge
-app_info{javaVersion="11",} 1.0
-```  
+app_info{javaVersion="11"} 1.0
+```
+
+
 
 ## Simple Prometheus server
 
@@ -45,52 +86,62 @@ To start the server you need your instance of `PrometheusMeterRegistry` and a po
 
 ```java
 new SimplePrometheusServer(LOG::info)
-                .startMetricsServer(
-                    prometheusRegistry, 9610
-                );
-``` 
+        .startMetricsServer(prometheusRegistry, 9610);
+```
+
+
+
 
 ## TimedThirdPartyCall
 
-With `TimedThirdPartyCall` you can wrap your code to get metrics on the call with extended funtionality on top of what 
+With `TimedThirdPartyCall` you can wrap your code to get metrics on the call with extended funtionality on top of what
 micrometer Timed gives you.
 
-An example:
-```java
-final BiFunction<MyResponse, Optional<RuntimeException>, AppStatus> warnOnSituation = (response, possibleException) -> possibleException.isPresent() || "ERROR_SITUATION".equals(response.data) ? AppStatus.WARN : AppStatus.OK;
 
-final TimedThirdPartyCall<MyResponse> getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+An example:
+
+```java
+BiFunction<MyResponse, Optional<RuntimeException>, AppStatus> warnOnSituation =
+        (response, possibleException) -> possibleException.isPresent() || "ERROR_SITUATION".equals(response.data) ? AppStatus.WARN : AppStatus.OK;
+
+TimedThirdPartyCall<MyResponse> getStuff = TimedThirdPartyCallDescriptor
+        .create("ExternalService", "getStuff", prometheusRegistry)
         .callResponseStatus(warnOnSituation);
 
 getStuff.call(() -> new MyResponse("ERROR_SITUATION"));
-``` 
+```
 
 This will produce a number of metrics:
+
 ```
 app_third_party_call_total{name="ExternalService_getStuff", status="OK"} 0.0
 app_third_party_call_total{name="ExternalService_getStuff", status="WARN"} 1.0
 app_third_party_call_total{name="ExternalService_getStuff", status="FAILED"} 0.0
-app_third_party_call_seconds_count{name="ExternalService_getStuff",} 1.0
-app_third_party_call_seconds_sum{name="ExternalService_getStuff",} 6.6018E-5
-app_third_party_call_seconds_max{name="ExternalService_getStuff",} 6.6018E-5
+app_third_party_call_seconds_count{name="ExternalService_getStuff"} 1.0
+app_third_party_call_seconds_sum{name="ExternalService_getStuff"} 6.6018E-5
+app_third_party_call_seconds_max{name="ExternalService_getStuff"} 6.6018E-5
 ```
 
 The idea is that Timed only count exections overall. What we want in addition is finer granularity to create better alerts
-in our alerting rig. By specifying a function by witch we say OK/WARN/FAILED we can exclude error-situations 
+in our alerting rig. By specifying a function by witch we say OK/WARN/FAILED we can exclude error-situations
 that we want to igore from alerts reacting to `FAILED` or a percentage of `FAILED/TOTAL`.
 
 You can also use simple exception-mapper-function for a boolean OK/FAILED:
+
 ```java
-TimedThirdPartyCall<String> getStuff = TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
-    .exceptionAsFailure();
+TimedThirdPartyCall<String> getStuff = TimedThirdPartyCallDescriptor
+        .create("ExternalService", "getStuff", prometheusRegistry)
+        .exceptionAsFailure();
 
 String result = getStuff.call(() -> "OK");
 ```
 
 For timing `void` functions you can use `NoResultTimedThirdPartyCall`,
 acquired by invoking the `noResult()` method:
+
 ```java
-NoResultTimedThirdPartyCall voidFunction = TimedThirdPartyCallDescriptor.create("ExternalService", "voidFunction", prometheusRegistry)
+NoResultTimedThirdPartyCall voidFunction = TimedThirdPartyCallDescriptor
+        .create("ExternalService", "voidFunction", prometheusRegistry)
         .noResult()  // allows timing void function calls
         .exceptionAsFailure();
 
@@ -98,18 +149,22 @@ voidFunction.call(() -> {});
 ```
 
 You can also defined percentiles (default 0.5, 0.95, 0.99):
+
 ```java
-TimedThirdPartyCallDescriptor.create("ExternalService", "getStuff", prometheusRegistry)
+TimedThirdPartyCallDescriptor
+        .create("ExternalService", "getStuff", prometheusRegistry)
         .callResponseStatus(warnOnSituation, 0.95, 0.99);
 ```
 
+
+
 ## MetricsUpdater
 
-Often you want to have metrics that might be slow to get. Examples of this is count rows in a Postgres-database or 
-maybe stats from a keystore. Typically you want to have som kind of worker threat that updates this 
+Often you want to have metrics that might be slow to get. Examples of this is count rows in a Postgres-database or
+maybe stats from a keystore. Typically you want to have som kind of worker threat that updates this
 value on a regular basis. But how do you know that your worker thread is not stuck?
-For this you can use the `MetricsUpdater` class. Create an instance of it and specify the number of threads you want. Now 
-registrer a runnable at an interval. 
+For this you can use the `MetricsUpdater` class. Create an instance of it and specify the number of threads you want. Now
+registrer a runnable at an interval.
 
 ```java
 metricsUpdater.registerAsyncUpdate("count-table", Duration.ofMinutes(10), () -> {
@@ -130,7 +185,7 @@ You can the alert if this is stale:
 Sometimes you want to have metrics for some event that happens in your application. And sometimes you want som kind of
 alert or warning when they occur at a given rate. This implementation is a way to achieve that in a generic way.
 
-Your application need to implement the interface `AppBusinessEvent`. We usually do that with an enum so that we have 
+Your application need to implement the interface `AppBusinessEvent`. We usually do that with an enum so that we have
 easy access to the instance of the event. You can se a complete implementation of this in `AppBusinessEventLoggerTest`.
 You can also use the interface `AppSensorEvent` to add a multiplier score (severity) to an event.
 
@@ -141,10 +196,10 @@ eventLogger.log(MyBusinessEvents.VIOLATION_WITH_WARN);
 
 This should produce a prometheus scrape output like this:
 ```
-# HELP app_business_events_1min_warn_thresholds  
+# HELP app_business_events_1min_warn_thresholds
 # TYPE app_business_events_1min_warn_thresholds gauge
 app_business_events_1min_warn_thresholds{name="VIOLATION_WITH_WARN",} 5.0
-# HELP app_business_events_total  
+# HELP app_business_events_total
 # TYPE app_business_events_total counter
 app_business_events_total{name="VIOLATION_WITH_WARN",} 1.0
 ```
@@ -215,7 +270,7 @@ This will produce the following metrics during prometheus scraping, in addition 
 # TYPE logger_events_1min_threshold gauge
 logger_events_5min_threshold{application="my-application",level="warn",logger="ROOT",} 10.0
 logger_events_5min_threshold{application="my-application",level="error",logger="ROOT",} 5.0
-``` 
+```
 
 These metrics can be used for alerting in combination with the metrics above. Prometheus expression:
 ```
