@@ -17,48 +17,45 @@ package no.digipost.monitoring.micrometer;
 
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.Matchers.matchesRegex;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static uk.co.probablyfine.matchers.Java8Matchers.where;
 
 
 class ApplicationInfoMetricsTest {
 
-    private PrometheusMeterRegistry prometheusRegistry;
-
-    @BeforeEach
-    void setUp() {
-        this.prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-    }
+    private PrometheusMeterRegistry meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 
     @Test
-    public void shouldNotThrowErrorIfManifestValuesDontExists(){
-        try {
-            ApplicationInfoMetrics applicationInfoMetrics = new ApplicationInfoMetrics(ApplicationInfoMetricsTest.class);
-            applicationInfoMetrics.bindTo(prometheusRegistry);
-            System.out.println(prometheusRegistry.scrape());
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        }
+    public void shouldNotThrowErrorIfManifestValuesDontExists() {
+        assertDoesNotThrow(() -> {
+            var metrics = new ApplicationInfoMetrics(ApplicationInfoMetricsTest.class);
+            metrics.bindTo(meterRegistry);
+            System.out.println(meterRegistry.scrape());
+        });
     }
 
     @Test
     void shouldOverrideManifestValueWithSystemProperty() {
-        ApplicationInfoMetrics applicationInfoMetrics = new ApplicationInfoMetrics(Logger.class);
-        String app = "NotMyApp";
+        var metrics = new ApplicationInfoMetrics(Logger.class);
+
+        metrics.bindTo(meterRegistry);
+        assertThat(meterRegistry, where(PrometheusMeterRegistry::scrape, matchesRegex("(?s).+javaBuildVersion=\".+\".+")));
+
+
+        String overriddenVersion = "Microsoft J# Version 0.001 Alpha";
         try {
-            System.setProperty("Implementation-Title", app);
-            applicationInfoMetrics.bindTo(prometheusRegistry);
+            System.setProperty("Build-Jdk-Spec", overriddenVersion);
+            metrics.bindTo(meterRegistry);
         } finally {
-            System.getProperties().remove("Implementation-Title");
+            System.clearProperty("Build-Jdk-Spec");
         }
-        String scrapeResult = prometheusRegistry.scrape();
-        assertThat(scrapeResult, containsString(String.format("application=\"%s\"", app)));
+        assertThat(meterRegistry, where(PrometheusMeterRegistry::scrape, containsString("javaBuildVersion=\"" + overriddenVersion)));
     }
 
 }

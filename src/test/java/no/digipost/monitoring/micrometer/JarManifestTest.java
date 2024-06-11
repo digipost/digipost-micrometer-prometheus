@@ -18,6 +18,8 @@ package no.digipost.monitoring.micrometer;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import org.junit.jupiter.api.Test;
 
+import java.util.jar.Manifest;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -27,7 +29,7 @@ class JarManifestTest {
 
     @Test
     void should_read_manifest_file_from_a_jar_a_class_resides_in() {
-        final JarManifest jarManifest = new JarManifest(MeterBinder.class);
+        Manifest jarManifest = JarManifest.resolveFromClassInJar(MeterBinder.class);
 
         assertThat(jarManifest.getMainAttributes().getValue("Manifest-Version"), is(equalTo("1.0")));
         assertThat(jarManifest.getMainAttributes().getValue("Implementation-Title"), containsString("io.micrometer"));

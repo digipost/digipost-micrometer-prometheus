@@ -20,12 +20,14 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.jar.Manifest;
+import java.util.stream.Stream;
 
-import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static no.digipost.monitoring.micrometer.KeyValueResolver.FROM_ENVIRONMENT_VARIABLES;
+import static no.digipost.monitoring.micrometer.KeyValueResolver.FROM_SYSTEM_PROPERTIES;
+import static no.digipost.monitoring.micrometer.KeyValueResolver.noValue;
 
 /**
  * Adds `app.info` gauge that has several tags suitable for showing information about
@@ -40,7 +42,7 @@ import static java.util.Optional.ofNullable;
  */
 public class ApplicationInfoMetrics implements MeterBinder {
 
-    final Manifest manifest;
+    private final KeyValueResolver<String> fromRuntimeEnvironment;
 
     /**
      * This method will find your running mainclass from System.properties("sun.java.command")
@@ -52,31 +54,36 @@ public class ApplicationInfoMetrics implements MeterBinder {
      * It could be that the property is missing?
      */
     public ApplicationInfoMetrics() throws ClassNotFoundException {
-        manifest = new JarManifest();
+        this(null);
     }
 
     /**
      * Base metrics tags of MANIFEST.MF from jar witch holds your class.
      *
-     * @param classFromJar - Class contained in jar you want metrics from
+     * @param classInJar - Class contained in jar you want metrics from
      */
-    public ApplicationInfoMetrics(Class<?> classFromJar) {
-        manifest = new JarManifest(classFromJar);
+    public ApplicationInfoMetrics(Class<?> classInJar) {
+        this.fromRuntimeEnvironment = KeyValueResolver
+                .inOrderOfPrecedence(
+                    FROM_SYSTEM_PROPERTIES,
+                    FROM_ENVIRONMENT_VARIABLES,
+                    Optional.ofNullable(classInJar)
+                        .flatMap(JarManifest::tryResolveFromClassInJar).or(JarManifest::tryResolveAutomatically)
+                        .map(KeyValueResolver::fromManifestMainAttributes)
+                        .orElse(noValue()));
     }
+
 
     @Override
     public void bindTo(MeterRegistry registry) {
-        fromManifestOrEnv("Implementation-Title")
-                .ifPresent(artifactId -> registry.config().commonTags("application", artifactId));
-
-        List<Tag> tags = new ArrayList<>();
-
-        addTagIfValuePresent(tags,"buildTime","Git-Build-Time");
-        addTagIfValuePresent(tags,"buildVersion","Git-Build-Version");
-        addTagIfValuePresent(tags,"buildNumber","Git-Commit");
-        addTagIfValuePresent(tags,"javaBuildVersion","Build-Jdk-Spec");
-
-        tags.add(Tag.of("javaVersion", (String) System.getProperties().get("java.version")));
+        List<Tag> tags = Stream.of(
+                fromRuntimeEnvironment.tryResolveValue("Git-Build-Time").map(buildTime -> Tag.of("buildTime", buildTime)),
+                fromRuntimeEnvironment.tryResolveValue("Git-Build-Version").map(buildVersion -> Tag.of("buildVersion", buildVersion)),
+                fromRuntimeEnvironment.tryResolveValue("Git-Commit").map(buildNumber -> Tag.of("buildNumber", buildNumber)),
+                fromRuntimeEnvironment.tryResolveValue("Build-Jdk-Spec").map(javaBuildVersion -> Tag.of("javaBuildVersion", javaBuildVersion)),
+                FROM_SYSTEM_PROPERTIES.tryResolveValue("java.version").map(javaVersion -> Tag.of("javaVersion", javaVersion)))
+            .flatMap(Optional::stream)
+            .collect(toList());
 
         Gauge.builder("app.info", () -> 1.0d)
                 .description("General build and runtime information about the application. This is a static value")
@@ -84,23 +91,4 @@ public class ApplicationInfoMetrics implements MeterBinder {
                 .register(registry);
     }
 
-    private void addTagIfValuePresent(List<Tag> tags, String tagKey, String valueName) {
-        fromManifestOrEnv(valueName).ifPresent(value -> tags.add(Tag.of(tagKey, value)));
-    }
-
-    private Optional<String> fromManifestOrEnv(String name) {
-        String value = environmentVariableOrSystemProperty(name);
-        if (value == null) {
-            value = manifest.getMainAttributes().getValue(name);
-        }
-        return ofNullable(value);
-    }
-
-    private static String environmentVariableOrSystemProperty(String name) {
-        String value = System.getProperty(name);
-        if (value == null) {
-            value = System.getenv(name);
-        }
-        return value;
-    }
 }
