@@ -18,8 +18,9 @@ package no.digipost.monitoring.async;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.util.logging.Level.WARNING;
 
 class AsyncUpdater implements Runnable {
 
@@ -46,8 +47,10 @@ class AsyncUpdater implements Runnable {
             updateNewValues.run();
             lastUpdate = clock.instant();
             lastUpdateSuccessful = true;
-        } catch (Exception e) {
-            LOG.log(Level.WARNING, "Unexpected exception in updater '" + updaterName + "' while updating metrics.", e);
+        } catch (Throwable e) {
+            LOG.log(WARNING,
+                    "Unexpected exception in updater '" + updaterName + "' while updating metrics: " +
+                    e.getClass().getSimpleName() + " " + e.getMessage(), e);
             lastUpdateSuccessful = false;
         }
     }
