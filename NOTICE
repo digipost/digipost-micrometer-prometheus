@@ -20,5 +20,4 @@ This software includes third party software subject to the following licenses:
   Prometheus Metrics Exposition Formats under The Apache Software License, Version 2.0
   Prometheus Metrics Model under The Apache Software License, Version 2.0
   Prometheus Metrics Tracer Common under The Apache Software License, Version 2.0
-  Shaded Protobuf under The Apache Software License, Version 2.0
 
