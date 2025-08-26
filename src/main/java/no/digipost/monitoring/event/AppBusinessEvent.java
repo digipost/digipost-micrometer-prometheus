@@ -15,6 +15,8 @@
  */
 package no.digipost.monitoring.event;
 
+import io.micrometer.core.instrument.Tag;
+
 import java.util.Optional;
 
 /**
@@ -22,10 +24,10 @@ import java.util.Optional;
  * event with an optional alerting threshold.
  *
  * Example:
- * <code> 
+ * <code>
  * public enum MyEvent implements AppBusinessEvent{
  *     VIOLATION_WITH_WARN_AND_ERROR;
- *     
+ *
  *  public String getName() {
  *      return name();
  *  }
@@ -41,7 +43,17 @@ import java.util.Optional;
  * </code>
  */
 public interface AppBusinessEvent {
+
+    /**
+     * Get the name of this event. This will result in the
+     * {@link Tag} {@code name=getName()} to be included in the event when
+     * registered with an {@link AppBusinessEventLogger}.
+     *
+     * @return the name of the event.
+     */
     String getName();
+
     Optional<EventsThreshold> getWarnThreshold();
+
     Optional<EventsThreshold> getErrorThreshold();
 }
