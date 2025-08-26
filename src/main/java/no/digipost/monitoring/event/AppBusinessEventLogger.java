@@ -17,23 +17,29 @@ package no.digipost.monitoring.event;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * EventLogger-implementation for metrics with gauges for warns and errors
  *
- * You need to implement the logic for the actual events your self. 
+ * You need to implement the logic for the actual events your self.
  *
  * @see AppBusinessEvent for more information.
  *
  * Example output:
- * # HELP app_business_events_1min_warn_thresholds  
+ * # HELP app_business_events_1min_warn_thresholds
  * # TYPE app_business_events_1min_warn_thresholds gauge
  * app_business_events_1min_warn_thresholds{name="VIOLATION_WITH_WARN_AND_ERROR",} 5.0
- * # HELP app_business_events_total  
+ * # HELP app_business_events_total
  * # TYPE app_business_events_total counter
  * app_business_events_total{name="VIOLATION_WITH_WARN_AND_ERROR",} 1.0
- * # HELP app_business_events_1min_error_thresholds  
+ * # HELP app_business_events_1min_error_thresholds
  * # TYPE app_business_events_1min_error_thresholds gauge
  * app_business_events_1min_error_thresholds{name="VIOLATION_WITH_WARN_AND_ERROR",} 5.0
  *
@@ -46,6 +52,8 @@ import io.micrometer.core.instrument.Tags;
  */
 public class AppBusinessEventLogger implements EventLogger {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AppBusinessEventLogger.class);
+
     static final String METRIC_APP_BUSINESS_EVENTS_TOTAL = "app_business_events_total";
     static final String METRIC_APP_BUSINESS_EVENTS_WARN_THRESHOLDS = "app_business_events_1min_warn_thresholds";
     static final String METRIC_APP_BUSINESS_EVENTS_ERROR_THRESHOLDS = "app_business_events_1min_error_thresholds";
@@ -57,8 +65,8 @@ public class AppBusinessEventLogger implements EventLogger {
         this.meterRegistry = meterRegistry;
     }
 
-    Counter counter(AppBusinessEvent event) {
-        return this.meterRegistry.counter(METRIC_APP_BUSINESS_EVENTS_TOTAL, Tags.of("name", event.getName()));
+    private Counter counter(Tags tags) {
+        return this.meterRegistry.counter(METRIC_APP_BUSINESS_EVENTS_TOTAL, tags);
     }
 
     @Override
@@ -68,11 +76,36 @@ public class AppBusinessEventLogger implements EventLogger {
 
     @Override
     public void log(AppBusinessEvent event, double increment) {
-        this.counter(event).increment(increment);
-        event.getWarnThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_WARN_THRESHOLDS, Tags.of("name", event.getName()), e.getOneMinuteThreshold()));
-        event.getErrorThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_ERROR_THRESHOLDS, Tags.of("name", event.getName()), e.getOneMinuteThreshold()));
+        Tags tags = resolveTagsOf(event);
+        this.counter(tags).increment(increment);
+        event.getWarnThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_WARN_THRESHOLDS, tags, e.getOneMinuteThreshold()));
+        event.getErrorThreshold().ifPresent(e -> this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_ERROR_THRESHOLDS, tags, e.getOneMinuteThreshold()));
         if (event instanceof AppSensorEvent) {
-            this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_SENSOR_SCORE, Tags.of("name", event.getName()), ((AppSensorEvent) event).getSensorScore());
+            this.meterRegistry.gauge(METRIC_APP_BUSINESS_EVENTS_SENSOR_SCORE, resolveTagsOf(event), ((AppSensorEvent) event).getSensorScore());
+        }
+    }
+
+    private static Tags resolveTagsOf(AppBusinessEvent event) {
+        Tag eventNameTag = Tag.of("name", event.getName());
+        Map<String, String> additionalTags = event.getAdditionalTags();
+        if (additionalTags == null || additionalTags.isEmpty()) {
+            return Tags.of(eventNameTag);
+        } else {
+            return additionalTags.entrySet().stream()
+                .filter(t -> {
+                    boolean attemptsOverwriteNameTag = Objects.equals(eventNameTag.getKey(), t.getKey());
+                    if (attemptsOverwriteNameTag) {
+                        LOG.warn(
+                                "The event {} ({}) attempted to include the additional tag {}=\"{}\", " +
+                                "which would overwrite the reserved tag used for the event's name, " +
+                                "and is not allowed. The tag is discarded.",
+                                event.getName(), event.getClass().getName(), t.getKey(), t.getValue());
+                    }
+                    return !attemptsOverwriteNameTag;
+                })
+                .map(t -> Tag.of(t.getKey(), t.getValue()))
+                .reduce(Tags.empty(), Tags::and, Tags::and)
+                .and(eventNameTag);
         }
     }
 }

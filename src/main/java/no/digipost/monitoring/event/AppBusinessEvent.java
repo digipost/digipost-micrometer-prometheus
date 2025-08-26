@@ -17,6 +17,8 @@ package no.digipost.monitoring.event;
 
 import io.micrometer.core.instrument.Tag;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -92,4 +94,19 @@ public interface AppBusinessEvent {
     Optional<EventsThreshold> getWarnThreshold();
 
     Optional<EventsThreshold> getErrorThreshold();
+
+    /**
+     * Get any additional tags to include in this event.
+     * <p>
+     * <strong>Note:</strong> any tag returned by this is treated with lower
+     * precedence than tags reserved for AppBusinessEventLogger to set as part
+     * of its operation. E.g. if you return the mapping {@code name="SOME_NAME"},
+     * this will be silently discarded (it may be logged as a invalid use of the API),
+     * as the value from {@link #getName()} takes precedence.
+     *
+     * @return the additional tag to include in this event
+     */
+    default Map<String, String> getAdditionalTags() {
+        return Collections.emptyMap();
+    }
 }

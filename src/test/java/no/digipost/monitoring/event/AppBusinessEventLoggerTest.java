@@ -18,13 +18,16 @@ package no.digipost.monitoring.event;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class AppBusinessEventLoggerTest {
 
@@ -76,6 +79,36 @@ public class AppBusinessEventLoggerTest {
 
         assertThat(prometheusRegistry.scrape(), not(containsString("NaN")));
     }
+
+    @Nested
+    class AdditionalTags {
+        @Test
+        void event_name_takes_precedence_over_additional_tags() {
+            eventLogger.log(Event.DISCARDED_ADDITIONAL_NAME_TAG);
+            assertAll(
+                    () -> assertThat(prometheusRegistry.scrape(), not(containsString(Event.DISCARDED_ADDITIONAL_NAME_TAG.getAdditionalTags().get("name")))),
+                    () -> assertThat(prometheusRegistry.scrape(), containsString(Event.DISCARDED_ADDITIONAL_NAME_TAG.getName())),
+                    () -> assertThat(prometheusRegistry.scrape(), containsString(Event.DISCARDED_ADDITIONAL_NAME_TAG.getAdditionalTags().get("myTag"))));
+        }
+    }
+
+    private enum Event implements AppBusinessEvent.Informational, AppBusinessEvent.NamedAsEnum {
+        DISCARDED_ADDITIONAL_NAME_TAG(Map.of(
+                "name", "discardedValue",
+                "myTag", "myTagValue"));
+
+        final Map<String, String> additionalTags;
+
+        Event(Map<String, String> additionalTags) {
+            this.additionalTags = additionalTags;
+        }
+
+        @Override
+        public Map<String, String> getAdditionalTags() {
+            return additionalTags;
+        }
+    }
+
 
     private enum MyBusinessEvents implements AppBusinessEvent {
         VIOLATION,
