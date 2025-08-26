@@ -45,6 +45,42 @@ import java.util.Optional;
 public interface AppBusinessEvent {
 
     /**
+     * A variant of {@link AppBusinessEvent} meant for events
+     * implemented as {@code enum}s, and the {@link Enum#name() name}
+     * of the {@code enum} is the event's {@link #getName() name}.
+     */
+    interface NamedAsEnum extends AppBusinessEvent {
+
+        @Override
+        default String getName() {
+            return name();
+        }
+
+        String name();
+    }
+
+    /**
+     * A variant of {@link AppBusinessEvent} meant for informational
+     * events which are not designed to trigger errors and warnings,
+     * or may trigger alarms based on other externally defined rules.
+     *
+     * The {@link #getWarnThreshold()} and {@link #getErrorThreshold()}
+     * are both implemented to return {@link Optional#empty() no threshold}.
+     */
+    interface Informational extends AppBusinessEvent {
+        @Override
+        default Optional<EventsThreshold> getWarnThreshold() {
+            return Optional.empty();
+        }
+
+        @Override
+        default Optional<EventsThreshold> getErrorThreshold() {
+            return Optional.empty();
+        }
+    }
+
+
+    /**
      * Get the name of this event. This will result in the
      * {@link Tag} {@code name=getName()} to be included in the event when
      * registered with an {@link AppBusinessEventLogger}.
